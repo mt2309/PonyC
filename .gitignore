@@ -1,0 +1,11 @@
+bin/ponyC
+ponyC.xcodeproj
+cmake_install.cmake
+**/CMakeFiles/*
+**/CMakeCache.txt
+**/CMakeScripts/*
+**/Makefile
+CMakeFiles/*
+CMakeCache.txt
+CMakeScripts/*
+Makefile
