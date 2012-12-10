@@ -66,6 +66,7 @@ int main(int argc, char** argv) {
     for(auto & prog : *program_text) {
             
         Parser* p = new Parser(get<1>(prog));
+        AST* ast;
         cout << "Compiling file: " << get<0>(prog) << endl;
 
         // If there's a stage given, dump it to stdin
@@ -73,7 +74,7 @@ int main(int argc, char** argv) {
         if (vm.count("stage")) {
             switch(vm["stage"].as<int>()) {
                 case 1:
-                    cout << p->parse() << endl;
+                    ast = p->parse();
                     break;
                 case 2:
                     cout << "Not yet implemented" << endl;

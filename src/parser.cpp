@@ -173,8 +173,7 @@ AST* Parser::annotation() {
         { TK_BANG, &Parser::ast_token },
         { TK_UNIQ, &Parser::ast_token },
         { TK_READONLY, &Parser::ast_token },
-        { TK_RECEIVER, &Parser::ast_token },
-        { null, nullptr }
+        { TK_RECEIVER, &Parser::ast_token }
     };
 
     return rulealt(alt);
@@ -192,8 +191,7 @@ AST* Parser::atom() {
         { TK_FLOAT, &Parser::ast_token },
         { TK_STRING, &Parser::ast_token },
         { TK_ID, &Parser::ast_token },
-        { TK_TYPEID, &Parser::ast_token },
-        { null, NULL }
+        { TK_TYPEID, &Parser::ast_token }
     };
     
     AST* ast = this->rulealt(alt);
@@ -266,8 +264,7 @@ AST* Parser::unary() {
         { TK_PARTIAL, &Parser::unop },
         { TK_MINUS, &Parser::unop },
         { TK_BANG, &Parser::unop },
-        { TK_LAMBDA, &Parser::lambda },
-        { null, nullptr }
+        { TK_LAMBDA, &Parser::lambda }
     };
     
     AST* ast = this->rulealt(alt);
@@ -446,8 +443,7 @@ AST* Parser::caseblock() {
 AST* Parser::match() {
     
     static alt_t alt[] = {
-        { TK_CASE, &Parser::caseblock },
-        { null, nullptr }
+        { TK_CASE, &Parser::caseblock }
     };
     
     AST* ast = this->ast_expect(TK_MATCH);
@@ -530,9 +526,8 @@ AST* Parser::block() {
         { TK_FLOAT,     &Parser::assignment },
         { TK_STRING,    &Parser::assignment },
         { TK_ID,        &Parser::assignment },
-        { TK_TYPEID,    &Parser::assignment },
+        { TK_TYPEID,    &Parser::assignment }
         
-        { null, nullptr }
     };
     
     std::cout << "block" << std::endl;
@@ -622,8 +617,7 @@ AST* Parser::typeelement() {
     {
         { TK_PARTIAL, &Parser::partialtype },
         { TK_TYPEID, &Parser::typeclass },
-        { TK_LAMBDA, &Parser::typelambda },
-        { null, nullptr }
+        { TK_LAMBDA, &Parser::typelambda }
     };
     
     std::cout << "typeelement" << std::endl;
@@ -748,8 +742,7 @@ AST* Parser::typebody() {
         { TK_NEW,       &Parser::constructor },
         { TK_AMBIENT,   &Parser::ambient },
         { TK_FUNCTION,  &Parser::function },
-        { TK_MESSAGE,   &Parser::message },
-        { null, nullptr }
+        { TK_MESSAGE,   &Parser::message }
     };
     
     AST* ast = this->ast_new( TK_TYPEBODY );
@@ -884,7 +877,6 @@ AST* Parser::module() {
         { TK_TRAIT,     &Parser::trait },
         { TK_OBJECT,    &Parser::object },
         { TK_ACTOR,     &Parser::actor },
-        { null,         nullptr }
     };
     
     std::cout << "Module" << std::endl;

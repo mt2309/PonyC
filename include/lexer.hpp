@@ -115,9 +115,8 @@ typedef enum {
     TK_CASEVAR,
     TK_LIST,
     
-    TK_EOF,
+    TK_EOF
     
-    null
 } tok_type;
 
 
@@ -137,6 +136,11 @@ typedef struct Token {
 
 void token_free(Token*);
 
+typedef struct symbol_t {
+    const std::string symbol;
+    tok_type id;
+} symbol_t;
+
 
 class Lexer {
 private:
@@ -150,9 +154,7 @@ private:
     std::string* buffer;
     
     std::vector<error_t>* error_list;
-    
-    Lexer() { }
-    
+        
 public:
     Lexer(std::string*,std::vector<error_t>*);
     Token* next();

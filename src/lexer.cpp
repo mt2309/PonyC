@@ -16,12 +16,7 @@
 #include <math.h>
 #include <boost/format.hpp>
 
-typedef struct symbol_t {
-    const std::string symbol;
-    tok_type id;
-} symbol_t;
-
-static const symbol_t symbols2[] = {
+static const std::vector<symbol_t> symbols2 = {
     { "->", TK_RESULTS },
     { "::", TK_PACKAGE },
     
@@ -35,11 +30,9 @@ static const symbol_t symbols2[] = {
     
     { "<=", TK_LE },
     { ">=", TK_GE },
-    
-    { "", null }
 };
 
-static const symbol_t symbols1[] =
+static const std::vector<symbol_t> symbols1 =
 {
     { "{", TK_LBRACE },
     { "}", TK_RBRACE },
@@ -71,11 +64,9 @@ static const symbol_t symbols1[] =
     { "@", TK_UNIQ },
     { "#", TK_READONLY },
     { "?", TK_RECEIVER },
-    
-    { "", null }
 };
 
-static const symbol_t keywords[] =
+static const std::vector<symbol_t> keywords =
 {
     { "use", TK_USE },
     { "declare", TK_DECLARE },
@@ -110,8 +101,6 @@ static const symbol_t keywords[] =
     { "this", TK_THIS },
     { "true", TK_TRUE },
     { "false", TK_FALSE },
-    
-    { "", null }
 };
 
 void Lexer::push_error(std::string err) {
@@ -653,9 +642,9 @@ Token* Lexer::identifier() {
     
     this->read_id();
     
-    for( const symbol_t* p = keywords; p->symbol.compare("") == 0; p++ ) {
-        if (this->buffer->compare(p->symbol) == 0) {
-            t->id = p->id;
+    for ( auto p : keywords) {
+        if (this->buffer->compare(p.symbol) == 0) {
+            t->id = p.id;
             this->buffer->assign("");
             return t;
         }
@@ -688,21 +677,22 @@ Token* Lexer::symbol() {
         sym[1] = this->look();
         
         if(isSymbol(sym[1])) {
-            for( const symbol_t* p = symbols2; p->symbol.compare("") == 0; p++) {
-                if( (sym[0] == p->symbol[0]) && (sym[1] == p->symbol[1])) {
+            for( auto p : symbols2) {
+                if((sym[0] == p.symbol[0]) && (sym[1] == p.symbol[1]))
+                {
                     this->step();
                     t = this->token_new();
-                    t->id = p->id;
+                    t->id = p.id;
                     return t;
                 }
             }
         }
     }
     
-    for( const symbol_t* p = symbols1; p->symbol.compare(""); p++) {
-        if( sym[0] == p->symbol[0]) {
+    for( auto p : symbols1) {
+        if( sym[0] == p.symbol[0]) {
             t = this->token_new();
-            t->id = p->id;
+            t->id = p.id;
             return t;
         }
     }
