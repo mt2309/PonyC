@@ -9,3 +9,5 @@ CMakeFiles/*
 CMakeCache.txt
 CMakeScripts/*
 Makefile
+bin/
+ponyC.build/
