@@ -128,21 +128,18 @@ void Parser::rulelist(rule_t rule, tok_type t, AST* ast, int slot) {
     }
 }
 
-AST* Parser::rulealt(const alt_t* alt) {
+AST* Parser::rulealt(const std::vector<alt_t> alt_vec) {
     
-    
-    while (alt->f != nullptr) {
-        if (this->current() == alt->id) {
-            return (this->*(alt->f))();
+    for (auto alt : alt_vec) {
+        if (this->current() == alt.id) {
+            return (this->*(alt.f))();
         }
-        
-        alt++;
     }
     
     return nullptr;
 }
 
-void Parser::rulealtlist(alt_t* alt, AST* ast, int slot) {
+void Parser::rulealtlist(const std::vector<alt_t> alt_vec, AST* ast, int slot) {
     assert(ast != nullptr);
     assert(slot >= 0);
     assert(slot < AST_SLOTS);
@@ -150,9 +147,11 @@ void Parser::rulealtlist(alt_t* alt, AST* ast, int slot) {
     AST* last = nullptr;
     
     while (true) {
-        AST* child = this->rulealt(alt);
-        if (child == nullptr)
+        std::cout << "Looping in altlist" << std::endl;
+        AST* child = this->rulealt(alt_vec);
+        if (child == nullptr) {
             return;
+        }
         
         if (last != nullptr) {
             last->sibling = child;
@@ -169,10 +168,10 @@ AST* Parser::annotation() {
     
     std::cout << "annotation" << std::endl;
     
-    static const alt_t alt[] = {
+    static const std::vector<alt_t> alt = {
         { TK_BANG, &Parser::ast_token },
         { TK_UNIQ, &Parser::ast_token },
-        { TK_READONLY, &Parser::ast_token },
+        { TK_MUT, &Parser::ast_token },
         { TK_RECEIVER, &Parser::ast_token }
     };
 
@@ -182,7 +181,7 @@ AST* Parser::annotation() {
 AST* Parser::atom() {
     
     // THIS | TRUE | FALSE | INT | STRING | ID | typeclass
-    static alt_t alt[] =
+    static std::vector<alt_t> alt =
     {
         { TK_THIS, &Parser::ast_token },
         { TK_TRUE, &Parser::ast_token },
@@ -259,7 +258,7 @@ AST* Parser::unop() {
 
 AST* Parser::unary() {
     
-    static alt_t alt[] =
+    static std::vector<alt_t> alt =
     {
         { TK_PARTIAL, &Parser::unop },
         { TK_MINUS, &Parser::unop },
@@ -442,7 +441,7 @@ AST* Parser::caseblock() {
 
 AST* Parser::match() {
     
-    static alt_t alt[] = {
+    static std::vector<alt_t> alt = {
         { TK_CASE, &Parser::caseblock }
     };
     
@@ -505,7 +504,7 @@ AST* Parser::assignment() {
 
 AST* Parser::block() {
     
-    static alt_t alt[] =
+    static std::vector<alt_t> alt =
     {
         { TK_LBRACE,    &Parser::block },
         { TK_IF,        &Parser::conditional },
@@ -613,7 +612,7 @@ AST* Parser::partialtype() {
 }
 
 AST* Parser::typeelement() {
-    static alt_t alt[] =
+    static std::vector<alt_t> alt =
     {
         { TK_PARTIAL, &Parser::partialtype },
         { TK_TYPEID, &Parser::typeclass },
@@ -736,7 +735,7 @@ AST* Parser::message() {
 }
 
 AST* Parser::typebody() {
-    static alt_t alt[] = {
+    static std::vector<alt_t> alt = {
         { TK_VAR,       &Parser::field },
         { TK_DELEGATE,  &Parser::delegate },
         { TK_NEW,       &Parser::constructor },
@@ -869,7 +868,7 @@ AST* Parser::use() {
 
 AST* Parser::module() {
     
-    static alt_t alt[] =
+    static std::vector<alt_t> alt =
     {
         { TK_USE,       &Parser::use },
         { TK_DECLARE,   &Parser::declare },
@@ -882,8 +881,16 @@ AST* Parser::module() {
     std::cout << "Module" << std::endl;
     
     AST* ast = this->ast_new(TK_MODULE);
+    
+    std::cout << "new ast" << std::endl;
+    
     this->rulealtlist(alt, ast, 0 );
+    
+    std::cout << "rule-alt-list-module" << std::endl;
+    
     this->expect(TK_EOF, ast, -1);
+    
+    std::cout << "expected" << std::endl;
     
     return ast;
 

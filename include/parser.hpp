@@ -59,8 +59,6 @@ public:
     bool expect(tok_type, AST*,int);
     void rule(rule_t,AST*,int);
     void rulelist(rule_t,tok_type,AST*,int);
-    AST* rulealt(const alt_t*);
-    void rulealtlist(alt_t*,AST*,int);
     AST* tokenrule();
     AST* annotation();
     
@@ -69,7 +67,8 @@ private:
     AST* ast_new(tok_type id);
     AST* ast_token();
     AST* ast_expect(tok_type id);
-    
+    AST* rulealt(const std::vector<alt_t> alt_vec);
+    void rulealtlist(const std::vector<alt_t> alt_vec, AST* ast, int slot);
     
     AST* lambda();
     AST* typeclass();

@@ -32,8 +32,7 @@ static const std::vector<symbol_t> symbols2 = {
     { ">=", TK_GE },
 };
 
-static const std::vector<symbol_t> symbols1 =
-{
+static const std::vector<symbol_t> symbols1 = {
     { "{", TK_LBRACE },
     { "}", TK_RBRACE },
     { "(", TK_LPAREN },
@@ -62,12 +61,11 @@ static const std::vector<symbol_t> symbols1 =
     { "^", TK_XOR },
     
     { "@", TK_UNIQ },
-    { "#", TK_READONLY },
+    { "~", TK_MUT },
     { "?", TK_RECEIVER },
 };
 
-static const std::vector<symbol_t> keywords =
-{
+static const std::vector<symbol_t> keywords = {
     { "use", TK_USE },
     { "declare", TK_DECLARE },
     { "type", TK_TYPE },
@@ -136,7 +134,8 @@ char Lexer::look() {
 std::string* Lexer::buff_copy() {
     if (this->buffer->size() == 0)
         return nullptr;
-    std::string* ret = this->buffer;
+    std::string* ret = new std::string(*this->buffer);
+    delete this->buffer;
     this->buffer = new std::string("");
     return ret;
 }
@@ -145,7 +144,8 @@ void Lexer::string_terminate() {
     this->push_error("Unterminated string");
     this->ptr += this->len;
     this->len = 0;
-    this->buffer->assign("");
+    delete this->buffer;
+    this->buffer = new std::string("");
 }
 
 void Lexer::append(char c) {
@@ -153,21 +153,21 @@ void Lexer::append(char c) {
     this->buffer->append(1, c);
 }
 
-bool Lexer::appendn(unsigned int n) {
+bool Lexer::appendn(size_t len) {
     
-    unsigned int prev_pos = this->ptr;
+    size_t prev_pos = this->ptr;
     uint32_t c = 0;
     
-    if (this->len < n) {
+    if (this->len < len) {
         this->string_terminate();
         return false;
     }
     
-    this->adv(n);
+    this->adv(len);
     
-    for (unsigned int i = prev_pos; i < (n+prev_pos); i++) {
+    for (unsigned int i = prev_pos; i < (len+prev_pos); i++) {
         
-        std::cout << "Appending " << n << " chars" << std::endl;
+        std::cout << "Appending " << len << " chars" << std::endl;
         
         c <<= 4;
         
@@ -214,7 +214,7 @@ Token* Lexer::token_new() {
 
 void Lexer::lexer_newline() {
     this->line++;
-    this->line_pos = 1;
+    this->line_pos = 0;
 }
 
 void Lexer::nested_comment() {
@@ -236,14 +236,18 @@ void Lexer::nested_comment() {
             {
                 depth--;
             }
-        } else if (this->look() == '/') {
+            
+        }
+        else if (this->look() == '/') {
             this->step();
             
             if (this->look() == '*')
             {
                 depth++;
             }
-        } else if (this->look() == '\n') {
+            
+        }
+        else if (this->look() == '\n') {
             this->lexer_newline();
         }
         
@@ -495,7 +499,7 @@ Token* Lexer::hexadecimal() {
     {
         c = this->look();
         
-        if( (c >= '0') && (c <= '9') )
+        if((c >= '0') && (c <= '9'))
         {
             v = (v * 16) + (c - '0');
         } else if( (c >= 'a') && (c <= 'z') ) {
@@ -590,7 +594,7 @@ Token* Lexer::binary() {
         this->step();
     }
     
-    if( error ) { return NULL; }
+    if( error ) { return nullptr; }
     
     Token* t = this->token_new();
     t->id = TK_INT;
@@ -626,7 +630,7 @@ void Lexer::read_id() {
     {
         c = this->look();
         
-        if( (c == '_') || isalnum( c ) )
+        if((c == '_') || isalnum( c ))
         {
             this->append(c);
             this->step();
@@ -643,9 +647,10 @@ Token* Lexer::identifier() {
     this->read_id();
     
     for ( auto p : keywords) {
-        if (this->buffer->compare(p.symbol) == 0) {
+        if (!this->buffer->compare(p.symbol)) {
             t->id = p.id;
-            this->buffer->assign("");
+            delete this->buffer;
+            this->buffer = new std::string("");
             return t;
         }
     }
@@ -676,8 +681,10 @@ Token* Lexer::symbol() {
     if( this->len > 1 ) {
         sym[1] = this->look();
         
-        if(isSymbol(sym[1])) {
-            for( auto p : symbols2) {
+        if(isSymbol(sym[1]))
+        {
+            for( auto p : symbols2)
+            {
                 if((sym[0] == p.symbol[0]) && (sym[1] == p.symbol[1]))
                 {
                     this->step();
@@ -689,8 +696,10 @@ Token* Lexer::symbol() {
         }
     }
     
-    for( auto p : symbols1) {
-        if( sym[0] == p.symbol[0]) {
+    for( auto p : symbols1)
+    {
+        if( sym[0] == p.symbol[0])
+        {
             t = this->token_new();
             t->id = p.id;
             return t;
@@ -708,45 +717,58 @@ Token* Lexer::next() {
     {
         char c = this->look();
         
+        std::cout << "Character next = " << c << std::endl;
+        
         switch( c )
         {
-            case '\n':
-                this->lexer_newline();
+        case '\n':
+            this->lexer_newline();
+            this->step();
+            break;
+            
+        case '\r':
+        case '\t':
+        case ' ':
+            this->step();
+            break;
+            
+        case '/':
+                t = this->lexer_slash();
+            break;
+            
+        case '\"':
+            t = this->lexer_string();
+            break;
+            
+        default:
+            if( isdigit( c ) )
+            {
+                t = this->number();
+            }
+            else if( islower( c ) || (c == '_') )
+            {
+                t = this->identifier();
+            }
+            else if( isupper( c ) )
+            {
+                t = this->type_id();
+            }
+            else if( isSymbol( c ) )
+            {
+                t = this->symbol();
+            }
+            else
+            {
+                this->push_error((boost::format("Unrecognized character: %1%") % c ).str());
                 this->step();
-                break;
-                
-            case '\r':
-            case '\t':
-            case ' ':
-                this->step();
-                break;
-                
-            case '/':
-                    t = this->lexer_slash();
-                break;
-                
-            case '\"':
-                t = this->lexer_string();
-                break;
-                
-            default:
-                if( isdigit( c ) )
-                {
-                    t = this->number();
-                } else if( islower( c ) || (c == '_') ) {
-                    t = this->identifier();
-                } else if( isupper( c ) ) {
-                    t = this->type_id();
-                } else if( isSymbol( c ) ) {
-                    t = this->symbol();
-                } else {
-                    this->push_error((boost::format("Unrecognized character: %1%") % c ).str());
-                    this->step();
-                }
+            }
         }
     }
     
     if(t == nullptr) {
+        
+        std::cout << "t came out null" << std::endl;
+        
         t = this->token_new();
         t->id = TK_EOF;
     }
@@ -778,4 +800,5 @@ Lexer::Lexer(std::string* input, std::vector<error_t>* list) {
     this->line_pos = 1;
     this->ptr = 0;
     this->error_list = list;
+    this->buffer = new std::string("");
 };
