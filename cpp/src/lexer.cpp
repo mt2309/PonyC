@@ -28,6 +28,8 @@ static const std::vector<symbol_t> symbols2 = {
     { "#=", TK_STEQ },
     { "~=", TK_NSTEQ },
     
+    { "[:", TK_MODE },
+    
     { "<=", TK_LE },
     { ">=", TK_GE },
 };
@@ -62,7 +64,8 @@ static const std::vector<symbol_t> symbols1 = {
     
     { "@", TK_UNIQ },
     { "~", TK_MUT },
-    { "?", TK_RECEIVER },
+    
+    { ";", TK_SCOLON }
 };
 
 static const std::vector<symbol_t> keywords = {

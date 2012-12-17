@@ -163,16 +163,25 @@ void Parser::rulealtlist(const std::vector<alt_t> alt_vec, AST* ast, int slot) {
     }
 }
 
-AST* Parser::annotation() {
-    // (BANG | UNIQ | READONLY | RECEIVER)?
+AST* Parser::mode_receiver() {
+    AST* ast = this->ast_expect(TK_MODE);
     
-    std::cout << "annotation" << std::endl;
+    this->rule(&Parser::expr, ast, 0);
+    this->accept(TK_RBRACKET, ast, 1);
+    
+    return ast;
+}
+
+AST* Parser::mode() {
+    // ('!' | '@' | '~' | '[:'expr ']')?
+    
+    std::cout << "modal reference" << std::endl;
     
     static const std::vector<alt_t> alt = {
-        { TK_BANG, &Parser::ast_token },
-        { TK_UNIQ, &Parser::ast_token },
-        { TK_MUT, &Parser::ast_token },
-        { TK_RECEIVER, &Parser::ast_token }
+        { TK_BANG,  &Parser::ast_token },
+        { TK_UNIQ,  &Parser::ast_token },
+        { TK_MUT,   &Parser::ast_token },
+        { TK_MODE,  &Parser::mode_receiver }
     };
 
     return rulealt(alt);
@@ -388,8 +397,8 @@ AST* Parser::forloop() {
 AST* Parser::whileloop() {
     AST* ast = this->ast_expect(TK_WHILE);
     
-    this->rule(&Parser::expr, ast, 0 );
-    this->rule(&Parser::block, ast, 1 );
+    this->rule(&Parser::expr, ast, 0);
+    this->rule(&Parser::block, ast, 1);
     
     return ast;
 }
@@ -564,7 +573,7 @@ AST* Parser::typelambda() {
     
     std::cout << "typelamda" << std::endl;
     
-    this->rule(&Parser::annotation, ast, 0 );
+    this->rule(&Parser::mode, ast, 0 );
     this->rule(&Parser::args, ast, 1 );
     
     if( this->accept(TK_RESULTS, ast, -1 ) )
@@ -599,7 +608,7 @@ AST* Parser::typeclass() {
         this->expect(TK_TYPEID, ast, 1 );
     }
     
-    this->rule(&Parser::annotation, ast, 2 );
+    this->rule(&Parser::mode, ast, 2 );
     this->rule(&Parser::formalargs, ast, 3 );
     return ast;
 }
@@ -670,13 +679,14 @@ AST* Parser::constructor() {
     
     std::cout << "constructor" << std::endl;
     
-    this->accept(TK_ID, ast, 0 );
-    this->rule(&Parser::formalargs, ast, 1 );
-    this->rule(&Parser::args, ast, 2 );
-    this->accept(TK_THROWS, ast, 3 );
+    this->rule(&Parser::mode, ast, 0);
+    this->accept(TK_ID, ast, 1 );
+    this->rule(&Parser::formalargs, ast, 2 );
+    this->rule(&Parser::args, ast, 3 );
+    this->accept(TK_THROWS, ast, 4 );
     
     if(this->current() == TK_LBRACE)
-        this->rule(&Parser::block, ast, 4 );
+        this->rule(&Parser::block, ast, 5 );
     
     return ast;
 }
@@ -703,7 +713,7 @@ AST* Parser::function() {
     
     std::cout << "function" << std::endl;
     
-    this->rule(&Parser::annotation, ast, 0 );
+    this->rule(&Parser::mode, ast, 0 );
     this->accept(TK_ID, ast, 1 );
     this->rule(&Parser::formalargs, ast, 2 );
     this->rule(&Parser::args, ast, 3 );
@@ -724,12 +734,13 @@ AST* Parser::message() {
     
     std::cout << "message" << std::endl;
     
-    this->accept(TK_ID, ast, 0 );
-    this->rule(&Parser::formalargs, ast, 1 );
-    this->rule(&Parser::args, ast, 2 );
+    this->rule(&Parser::mode, ast, 0);
+    this->accept(TK_ID, ast, 1);
+    this->rule(&Parser::formalargs, ast, 2);
+    this->rule(&Parser::args, ast, 3);
     
     if( this->current() == TK_LBRACE )
-        this->rule(&Parser::block, ast, 3 );
+        this->rule(&Parser::block, ast, 4);
     
     return ast;
 }

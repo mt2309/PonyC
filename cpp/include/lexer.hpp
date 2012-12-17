@@ -63,8 +63,8 @@ typedef enum {
     TK_XOR      = 36,
     
     TK_UNIQ     = 37,
-    TK_MUT = 38,
-    TK_RECEIVER = 39,
+    TK_MUT      = 38,
+    TK_MODE     = 39,
     
     // keywords
     TK_USE      = 40,
@@ -115,7 +115,9 @@ typedef enum {
     TK_CASEVAR  = 83,
     TK_LIST     = 84,
     
-    TK_EOF      = 85
+    TK_SCOLON   = 85,
+    
+    TK_EOF      = 86
     
 } tok_type;
 

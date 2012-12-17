@@ -60,7 +60,7 @@ public:
     void rule(rule_t,AST*,int);
     void rulelist(rule_t,tok_type,AST*,int);
     AST* tokenrule();
-    AST* annotation();
+    AST* mode();
     
 private:
     
@@ -114,6 +114,7 @@ private:
     AST* declare();
     AST* use();
     AST* module();
+    AST* mode_receiver();
 };
 
 #endif
