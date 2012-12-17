@@ -1,6 +1,6 @@
 trait Hashable
 {
-  function# hash()->( U64 )
+  function hash()->( U64 )
 }
 
 object Deleted {}
@@ -16,11 +16,11 @@ object Hashmap[K:Hashable!, V]
     _count = 0
   }
 
-  function# size()->( _count )
+  function size()->( _count )
 
-  function# mod( h:U64 )->( h & (_nodes.length() - 1) )
+  function mod( h:U64 )->( h & (_nodes.length() - 1) )
 
-  function#( k:K )->( r:V?|None = None )
+  function( k:K )->( r:V?|None = None )
   {
     if _count == 0 { return }
 
@@ -116,3 +116,4 @@ object Hashmap[K:Hashable!, V]
     // FIX: resize the array if needed
   }
 }
+
