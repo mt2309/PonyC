@@ -23,6 +23,7 @@ AST* Parser::ast_new(tok_type id) {
     a->t->id = id;
     a->t->line = this->t->line;
     a->t->line_pos = this->t->line_pos;
+    a->children = new std::vector<AST*>(AST_SLOTS);
     return a;
 }
 
@@ -30,6 +31,7 @@ AST* Parser::ast_token() {
     AST* a = (AST*)calloc(1, sizeof(AST));
     a->t = this->t;
     this->t = this->lexer->next();
+    a->children = new std::vector<AST*>(AST_SLOTS);
     return a;
 }
 
@@ -48,7 +50,7 @@ static void ast_free(AST* ast) {
     if (ast->t != nullptr) { token_free(ast->t); }
     
     for (int i = 0; i < AST_SLOTS; i++) {
-        ast_free(ast->children[i]);
+        ast_free(ast->children->at(i));
     }
     
     ast_free(ast->sibling);
@@ -66,7 +68,7 @@ bool Parser::accept(tok_type id, AST* ast , int slot) {
     if ((ast != nullptr) && (slot >= 0)) {
         assert(slot < AST_SLOTS);
         AST* child = this->ast_token();
-        ast->children[slot] = child;
+        ast->children->at(slot) = child;
     } else {
         token_free(this->t);
         this->t = this->lexer->next();
@@ -93,7 +95,7 @@ void Parser::rule(rule_t f, AST* ast, int slot) {
     assert(slot < AST_SLOTS);
     
     AST* child = (this->*f)();
-    ast->children[slot] = child;
+    ast->children->at(slot) = child;
 }
 
 void Parser::rulelist(rule_t rule, tok_type t, AST* ast, int slot) {
@@ -112,7 +114,7 @@ void Parser::rulelist(rule_t rule, tok_type t, AST* ast, int slot) {
         if (last != nullptr)
             last->sibling = child;
         else
-            ast->children[slot] = child;
+            ast->children->at(slot) = child;
         
         if (!this->accept(t, ast, -1))
             return;
@@ -148,7 +150,7 @@ void Parser::rulealtlist(const std::vector<alt_t> alt_vec, AST* ast, int slot) {
         if (last != nullptr) {
             last->sibling = child;
         } else {
-            ast->children[slot] = child;
+            ast->children->at(slot) = child;
         }
         
         last = child;
@@ -222,7 +224,7 @@ AST* Parser::command() {
             switch (this->current()) {
                 case TK_CALL: {
                     AST* a = this->ast_token();
-                    a->children[0] = ast;
+                    a->children->at(0) = ast;
                     ast = a;
                     
                     this->accept(TK_ID, ast, 1);
@@ -233,7 +235,7 @@ AST* Parser::command() {
                     
                 case TK_LPAREN: {
                     AST* a = this->ast_token();
-                    a->children[0] = ast;
+                    a->children->at(0) = ast;
                     ast = a;
                     
                     this->rule(&Parser::args, ast, 2);
@@ -303,7 +305,7 @@ AST* Parser::expr() {
                 case TK_XOR:
                     {
                         AST* binop = this->ast_token();
-                        binop->children[0] = ast;
+                        binop->children->at(0) = ast;
                         ast = binop;
 
                         this->rule(&Parser::unary, ast, 1);

@@ -33,13 +33,15 @@ private:
     Token* t;
     AST* ast;
     std::string* file;
+    std::string* fileName;
     
 public:
 
-    Parser(std::string* file) {
+    Parser(std::string* fileName, std::string* file) {
         this->file = file;
+        this->fileName = fileName;
         this->error_list = new std::vector<error_t>();
-        this->lexer = new Lexer(file,this->error_list);
+        this->lexer = new Lexer(fileName,file,this->error_list);
     };
     
     std::vector<error_t>* error_list;

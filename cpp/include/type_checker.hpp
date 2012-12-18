@@ -9,6 +9,20 @@
 #ifndef __ponyC__type_checker__
 #define __ponyC__type_checker__
 
-#include <iostream>
+#include <vector>
+#include <map>
+#include "ast.hpp"
+
+class TypeChecker {
+    std::vector<AST*>* ast_list;
+    
+public:
+    TypeChecker(std::vector<AST*>* ast) {
+        this->ast_list = ast;
+    };
+    
+    // First pass
+    std::vector<Type*>* topLevelTypes();
+};
 
 #endif /* defined(__ponyC__type_checker__) */

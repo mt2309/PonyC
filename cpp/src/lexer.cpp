@@ -205,6 +205,7 @@ bool Lexer::appendn(size_t len) {
 
 Token* Lexer::token_new() {
     Token* tok = (Token*)calloc(1, sizeof(Token));
+    tok->fileName = this->fileName;
     tok->line = this->line;
     tok->line_pos = this->line_pos;
     return tok;
@@ -787,7 +788,8 @@ void token_free(Token* token) {
     free(token);
 }
 
-Lexer::Lexer(std::string* input, std::vector<error_t>* list) {
+Lexer::Lexer(std::string* fileName, std::string* input, std::vector<error_t>* list) {
+    this->fileName = fileName;
     this->m = input;
     this->len = input->size();
     this->line = 1;

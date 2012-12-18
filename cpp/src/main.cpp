@@ -6,6 +6,7 @@
 #include <boost/foreach.hpp>
 
 #include "parser.hpp"
+#include "type_checker.hpp"
 #include "code_gen.hpp"
 
 #define FILE_EXTENSION ".pony"
@@ -15,13 +16,15 @@ namespace fs = boost::filesystem;
 
 using namespace std;
 
+typedef string program_name;
+
 string stages = 
 R"(Stage 1: parser
 Stage 2: typer
 Stage 3: code-gen)";
 
 string read_file(string file_name);
-vector<tuple<string,string*>>* get_files_directory(string dir);
+vector<tuple<string*,string*>>* get_files_directory(string dir);
 
 int main(int argc, char** argv) {
     
@@ -61,14 +64,14 @@ int main(int argc, char** argv) {
     // Discussion needed on multi-file compilation
     string input = vm["input"].as<vector<string>>().front();
     
-    vector<tuple<string,string*>>* program_text = get_files_directory(input);
-    vector<AST*>* parsedAST = new vector<AST*>(program_text->size());
+    vector<tuple<program_name*,string*>>* program_text = get_files_directory(input);
+    auto parsedAST = new vector<AST*>(program_text->size());
     
     for(auto & prog : *program_text) {
             
-        Parser* p = new Parser(get<1>(prog));
+        Parser* p = new Parser(get<0>(prog),get<1>(prog));
         AST* ast;
-        cout << "Parsing file: " << get<0>(prog) << endl;
+        cout << "Parsing file: " << *get<0>(prog) << endl;
         ast = p->parse();
         if (p->error_list->size() > 0)
             cout << "Errors detected" << endl;
@@ -81,45 +84,8 @@ int main(int argc, char** argv) {
         return EXIT_SUCCESS;
     
     //Type check!
-    
-    
-    
-    
-
-        // If there's a stage given, dump it to stdin
-        // Perhaps output to a .parser/.typer/.code_gen or similar file instead?
-        if (vm.count("stage")) {
-            switch(vm["stage"].as<int>()) {
-                case 2:
-                    cout << "Not yet implemented" << endl;
-    //                cout << typer::type(parser::parse(program_text));
-                    break;
-                case 3:
-                    cout << "Not yet implemented" << endl;
-    //                cout << code_gen::generate(typer::type(parser::parse(program_text)));
-                    break;
-                default:
-                    cerr << "Use of undefined stage" << endl;
-                    exit(EXIT_FAILURE);
-            }
-        }
-        else {
-            // Else compile the code! Lets do this!
-            ofstream outfile;
-            if (vm.count("output")) {
-                outfile.open(vm["output"].as<string>().c_str());
-            }
-            else {
-                // TODO:
-                // This is not what we want - we'll be outputting llvm IR here
-                // a.out is what gcc/clang uses for binary files
-                outfile.open("a.out");
-            }
-            
-    //        outfile << code_gen::generate(typer::type(parser::parse(program_text)));
-        }
-        
-//        delete p;
+    auto typeChecker = new TypeChecker(parsedAST);
+    typeChecker->topLevelTypes();
     
     return EXIT_SUCCESS;
 }
@@ -134,33 +100,28 @@ string* read_file(fs::path path) {
     return new string(stream.str());
 }
 
-void recurse_dir(fs::path p, vector<tuple<string,string*>>* vec) {
+void recurse_dir(fs::path p, vector<tuple<string*,string*>>* vec) {
+    
     if (!fs::exists(p)) {
         cout << "Directory " << p.root_path() << " not found" << endl;
         exit(EXIT_FAILURE);
     }
-    
-    if (fs::is_regular(p)) {
-        vec->push_back(make_tuple(p.string(),
-                                  read_file(p)));
-        return;
-    }
-    
+        
     fs::directory_iterator end_it;
     
     for(fs::directory_iterator itr(p); itr != end_it; itr++) {
         if (fs::is_directory(itr->status())) {
             recurse_dir(itr->path(), vec);
         } else if (itr->path().extension() == FILE_EXTENSION) {
-            vec->push_back(make_tuple(itr->path().string(),
+            vec->push_back(make_tuple(new string(itr->path().string()),
                                  read_file(itr->path())));
         }
     }
 }
 
-vector<tuple<string,string*>>* get_files_directory(string dir) {
+vector<tuple<string*,string*>>* get_files_directory(string dir) {
     fs::path p(dir);
-    auto vec = new vector<tuple<string,string*>>();
+    auto vec = new vector<tuple<string*,string*>>();
     
     recurse_dir(p, vec);
     
