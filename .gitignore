@@ -9,3 +9,6 @@ cpp/src/Makefile
 cpp/Makefile
 bin/
 ponyC.build/
+
+.DS_Store
+**/.DS_Store
