@@ -2,6 +2,7 @@ bin/ponyC
 ponyC.xcodeproj
 cmake_install.cmake
 cpp/CMakeFiles/*
+cpp/src/CMakeFiles/*
 cpp/CMakeCache.txt
 cpp/CMakeScripts/*
 cpp/src/Makefile

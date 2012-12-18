@@ -60,12 +60,8 @@ void Parser::push_error(std::string err) {
 }
 
 bool Parser::accept(tok_type id, AST* ast , int slot) {
-    
-    std::cout << "Accepting" << std::endl;
-    
+        
     if (this->current() != id) { return false; }
-
-    std::cout << "Some more acceptance" << std::endl;
     
     if ((ast != nullptr) && (slot >= 0)) {
         assert(slot < AST_SLOTS);
@@ -83,12 +79,9 @@ bool Parser::expect(tok_type t , AST* ast ,int slot) {
     
     
     if (this->accept(t, ast, slot)) {
-        std::cout << "Expect" << std::endl;
         return true;
     }
-    
-    std::cout << "Not Expected" << std::endl;
-    
+        
     this->push_error((boost::format("Expected %1%, got %2%") % t % this->current()).str());
     return false;
     
@@ -147,7 +140,6 @@ void Parser::rulealtlist(const std::vector<alt_t> alt_vec, AST* ast, int slot) {
     AST* last = nullptr;
     
     while (true) {
-        std::cout << "Looping in altlist" << std::endl;
         AST* child = this->rulealt(alt_vec);
         if (child == nullptr) {
             return;
@@ -174,9 +166,7 @@ AST* Parser::mode_receiver() {
 
 AST* Parser::mode() {
     // ('!' | '@' | '~' | '[:'expr ']')?
-    
-    std::cout << "modal reference" << std::endl;
-    
+        
     static const std::vector<alt_t> alt = {
         { TK_BANG,  &Parser::ast_token },
         { TK_UNIQ,  &Parser::ast_token },
@@ -349,7 +339,6 @@ AST* Parser::args() {
     this->expect(TK_LPAREN, ast, -1);
     
     if (!this->accept(TK_RPAREN, ast, -1)) {
-        
         this->rulelist(&Parser::arg, TK_COMMA, ast, 0);
         this->expect(TK_RPAREN, ast, -1);
     }
@@ -498,9 +487,7 @@ AST* Parser::lvalue() {
 }
 
 AST* Parser::assignment() {
-    
-    std::cout << "assignment" << std::endl;
-    
+        
     AST* ast = this->ast_new(TK_ASSIGN);
     
     this->rulelist( &Parser::lvalue, TK_COMMA, ast, 0 );
@@ -537,9 +524,7 @@ AST* Parser::block() {
         { TK_TYPEID,    &Parser::assignment }
         
     };
-    
-    std::cout << "block" << std::endl;
-    
+
     AST* ast = this->ast_new( TK_BLOCK );
     this->expect(TK_LBRACE, ast, -1 );
     this->rulealtlist(alt, ast, 0 );
@@ -556,9 +541,7 @@ AST* Parser::block() {
 
 AST* Parser::formalargs() {
     AST* ast = this->ast_new( TK_FORMALARGS );
-    
-    std::cout << "formalargs" << std::endl;
-    
+        
     if( this->accept(TK_LBRACKET, ast, -1 ) )
     {
         this->rulelist( &Parser::arg, TK_COMMA, ast, 0 );
@@ -570,8 +553,6 @@ AST* Parser::formalargs() {
 
 AST* Parser::typelambda() {
     AST* ast = this->ast_expect( TK_LAMBDA );
-    
-    std::cout << "typelamda" << std::endl;
     
     this->rule(&Parser::mode, ast, 0 );
     this->rule(&Parser::args, ast, 1 );
@@ -589,8 +570,6 @@ AST* Parser::typelambda() {
 AST* Parser::lambda() {
     AST* ast = this->typelambda();
     
-    std::cout << "lambda" << std::endl;
-    
     if( this->accept(TK_IS, ast, -1 ) )
         this->rule(&Parser::block, ast, 4 );
     
@@ -599,8 +578,6 @@ AST* Parser::lambda() {
 
 AST* Parser::typeclass() {
     AST* ast = this->ast_new( TK_TYPECLASS );
-    
-    std::cout << "typeclass" << std::endl;
     
     this->expect(TK_TYPEID, ast, 0 );
     
@@ -614,7 +591,7 @@ AST* Parser::typeclass() {
 }
 
 AST* Parser::partialtype() {
-    std::cout << "partialtype" << std::endl;
+
     AST* ast = this->ast_expect(TK_PARTIAL);
     this->rule(&Parser::typeclass, ast, 0 );
     return ast;
@@ -628,8 +605,6 @@ AST* Parser::typeelement() {
         { TK_LAMBDA, &Parser::typelambda }
     };
     
-    std::cout << "typeelement" << std::endl;
-    
     AST* ast = this->rulealt(alt);
     
     if( ast == NULL ) {
@@ -641,8 +616,6 @@ AST* Parser::typeelement() {
 AST* Parser::oftype() {
     AST* ast = this->ast_new(TK_OFTYPE);
     
-    std::cout << "oftype" << std::endl;
-    
     if(this->accept(TK_OFTYPE, ast, -1 ))
         rulelist(&Parser::typeelement, TK_OR, ast, 0 );
     
@@ -651,8 +624,6 @@ AST* Parser::oftype() {
 
 AST* Parser::field() {
     AST* ast = this->ast_new( TK_FIELD );
-    
-    std::cout << "field" << std::endl;
     
     this->expect(TK_VAR, ast, -1 );
     this->expect(TK_ID, ast, 0 );
@@ -667,8 +638,6 @@ AST* Parser::field() {
 AST* Parser::delegate() {
     AST* ast = this->ast_expect( TK_DELEGATE );
     
-    std::cout << "delegate" << std::endl;
-    
     this->expect(TK_ID, ast, 0 );
     this->rule(&Parser::oftype, ast, 1 );
     return ast;
@@ -676,8 +645,6 @@ AST* Parser::delegate() {
 
 AST* Parser::constructor() {
     AST* ast = this->ast_expect(TK_NEW);
-    
-    std::cout << "constructor" << std::endl;
     
     this->rule(&Parser::mode, ast, 0);
     this->accept(TK_ID, ast, 1 );
@@ -695,8 +662,6 @@ AST* Parser::ambient() {
     
     AST* ast = this->ast_expect(TK_AMBIENT);
     
-    std::cout << "ambient" << std::endl;
-    
     this->accept(TK_ID, ast, 0 );
     this->rule(&Parser::formalargs, ast, 1 );
     this->rule(&Parser::args, ast, 2 );
@@ -710,8 +675,6 @@ AST* Parser::ambient() {
 
 AST* Parser::function() {
     AST* ast = this->ast_expect(TK_FUNCTION);
-    
-    std::cout << "function" << std::endl;
     
     this->rule(&Parser::mode, ast, 0 );
     this->accept(TK_ID, ast, 1 );
@@ -731,8 +694,6 @@ AST* Parser::function() {
 
 AST* Parser::message() {
     AST* ast = this->ast_expect(TK_MESSAGE);
-    
-    std::cout << "message" << std::endl;
     
     this->rule(&Parser::mode, ast, 0);
     this->accept(TK_ID, ast, 1);
@@ -757,8 +718,6 @@ AST* Parser::typebody() {
     
     AST* ast = this->ast_new( TK_TYPEBODY );
     
-    std::cout << "typebody" << std::endl;
-    
     this->expect(TK_LBRACE, ast, -1 );
     this->rulealtlist(alt, ast, 0 );
     this->expect(TK_RBRACE, ast, -1 );
@@ -769,8 +728,6 @@ AST* Parser::typebody() {
 AST* Parser::is() {
     AST* ast = this->ast_new( TK_IS );
     
-    std::cout << "is" << std::endl;
-    
     if(this->accept(TK_IS, ast, -1 ))
         this->rulelist(&Parser::typeclass, TK_COMMA, ast, 0 );
     
@@ -780,8 +737,6 @@ AST* Parser::is() {
 AST* Parser::trait() {
     AST* ast = this->ast_expect(TK_TRAIT);
     
-    std::cout << "trait" << std::endl;
-
     this->expect(TK_TYPEID, ast, 0 );
     this->rule(&Parser::formalargs, ast, 1 );
     this->rule(&Parser::is, ast, 2 );
@@ -792,8 +747,6 @@ AST* Parser::trait() {
 
 AST* Parser::object() {
     AST* ast = this->ast_expect(TK_OBJECT);
-    
-    std::cout << "object" << std::endl;
     
     this->expect(TK_TYPEID, ast, 0 );
     this->rule(&Parser::formalargs, ast, 1 );
@@ -806,8 +759,6 @@ AST* Parser::object() {
 AST* Parser::actor() {
     AST* ast = this->ast_expect(TK_ACTOR);
     
-    std::cout << "actor" << std::endl;
-    
     this->expect(TK_TYPEID, ast, 0 );
     this->rule(&Parser::formalargs, ast, 1 );
     this->rule(&Parser::is, ast, 2 );
@@ -819,8 +770,6 @@ AST* Parser::actor() {
 AST* Parser::type() {
     AST* ast = this->ast_expect(TK_TYPE);
     
-    std::cout << "type" << std::endl;
-    
     this->expect(TK_TYPEID, ast, 0 );
     this->rule(&Parser::oftype, ast, 1 );
     this->rule(&Parser::is, ast, 2 );
@@ -831,8 +780,6 @@ AST* Parser::type() {
 AST* Parser::map() {
     AST* ast = this->ast_new(TK_MAP);
     
-    std::cout << "map" << std::endl;
-    
     this->expect(TK_ID, ast, 0 );
     this->expect(TK_ASSIGN, ast, -1 );
     this->expect(TK_ID, ast, 1 );
@@ -842,8 +789,6 @@ AST* Parser::map() {
 
 AST* Parser::declaremap() {
     AST* ast = this->ast_new(TK_DECLAREMAP);
-    
-    std::cout << "Declaremap" << std::endl;
     
     if(this->accept(TK_LBRACE, ast, -1 )) {
         this->rulelist(&Parser::map, TK_COMMA, ast, 0 );
@@ -856,8 +801,6 @@ AST* Parser::declaremap() {
 AST* Parser::declare() {
     AST* ast = this->ast_expect(TK_DECLARE);
     
-    std::cout << "declare" << std::endl;
-    
     this->rule(&Parser::typeclass, ast, 0 );
     this->rule(&Parser::is, ast, 1 );
     this->rule(&Parser::declaremap, ast, 2 );
@@ -868,8 +811,6 @@ AST* Parser::declare() {
 AST* Parser::use() {
     AST* ast = this->ast_expect(TK_USE);
     
-    std::cout << "use" << std::endl;
-        
     if( this->accept(TK_TYPEID, ast, 0 ) )
         this->expect(TK_ASSIGN, ast, -1 );
     
@@ -889,22 +830,13 @@ AST* Parser::module() {
         { TK_ACTOR,     &Parser::actor },
     };
     
-    std::cout << "Module" << std::endl;
-    
     AST* ast = this->ast_new(TK_MODULE);
-    
-    std::cout << "new ast" << std::endl;
     
     this->rulealtlist(alt, ast, 0 );
     
-    std::cout << "rule-alt-list-module" << std::endl;
-    
     this->expect(TK_EOF, ast, -1);
     
-    std::cout << "expected" << std::endl;
-    
     return ast;
-
 }
 
 AST* Parser::parse() {

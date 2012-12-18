@@ -9,10 +9,4 @@
 #ifndef ponyC_code_gen_hpp
 #define ponyC_code_gen_hpp
 
-namespace code_gen {
-    
-    std::string generate(typer::typed_ast typed);
-    
-}
-
 #endif

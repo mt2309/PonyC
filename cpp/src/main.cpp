@@ -6,7 +6,6 @@
 #include <boost/foreach.hpp>
 
 #include "parser.hpp"
-#include "typer.hpp"
 #include "code_gen.hpp"
 
 #define FILE_EXTENSION ".pony"
@@ -54,28 +53,43 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
     
-    // For now, we'll handle the (slightly simpler) problem of compiling a single pony file.
-    // Lets just return the first file passed to us.
-    // TODO:
-    // Handle more than one file
+    int stage = INT32_MAX;
+    
+    if (vm.count("stage"))
+        stage = vm["stage"].as<int>();
+    
     // Discussion needed on multi-file compilation
     string input = vm["input"].as<vector<string>>().front();
     
     vector<tuple<string,string*>>* program_text = get_files_directory(input);
+    vector<AST*>* parsedAST = new vector<AST*>(program_text->size());
     
     for(auto & prog : *program_text) {
             
         Parser* p = new Parser(get<1>(prog));
         AST* ast;
-        cout << "Compiling file: " << get<0>(prog) << endl;
+        cout << "Parsing file: " << get<0>(prog) << endl;
+        ast = p->parse();
+        if (p->error_list->size() > 0)
+            cout << "Errors detected" << endl;
+        
+        parsedAST->push_back(ast);
+        delete p;
+    }
+    
+    if (stage == 1)
+        return EXIT_SUCCESS;
+    
+    //Type check!
+    
+    
+    
+    
 
         // If there's a stage given, dump it to stdin
         // Perhaps output to a .parser/.typer/.code_gen or similar file instead?
         if (vm.count("stage")) {
             switch(vm["stage"].as<int>()) {
-                case 1:
-                    ast = p->parse();
-                    break;
                 case 2:
                     cout << "Not yet implemented" << endl;
     //                cout << typer::type(parser::parse(program_text));
@@ -105,8 +119,7 @@ int main(int argc, char** argv) {
     //        outfile << code_gen::generate(typer::type(parser::parse(program_text)));
         }
         
-        delete p;
-    }
+//        delete p;
     
     return EXIT_SUCCESS;
 }

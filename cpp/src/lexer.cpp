@@ -130,7 +130,6 @@ void Lexer::step() {
 
 char Lexer::look() {
     assert(this->len > 0);
-    std::cout << "Looking at: " << this->m->at(this->ptr) << std::endl;
     return this->m->at(this->ptr);
 }
 
@@ -152,7 +151,6 @@ void Lexer::string_terminate() {
 }
 
 void Lexer::append(char c) {
-    std::cout << "Appending " << c << std::endl;
     this->buffer->append(1, c);
 }
 
@@ -169,9 +167,6 @@ bool Lexer::appendn(size_t len) {
     this->adv(len);
     
     for (unsigned int i = prev_pos; i < (len+prev_pos); i++) {
-        
-        std::cout << "Appending " << len << " chars" << std::endl;
-        
         c <<= 4;
         
         if( (this->m->at(i) >= '0') && (this->m->at(i) <= '9') ) {
@@ -720,8 +715,6 @@ Token* Lexer::next() {
     {
         char c = this->look();
         
-        std::cout << "Character next = " << c << std::endl;
-        
         switch( c )
         {
         case '\n':
@@ -769,8 +762,6 @@ Token* Lexer::next() {
     }
     
     if(t == nullptr) {
-        
-        std::cout << "t came out null" << std::endl;
         
         t = this->token_new();
         t->id = TK_EOF;

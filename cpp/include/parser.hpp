@@ -14,14 +14,7 @@
 
 #include "lexer.hpp"
 #include "error.hpp"
-
-#define AST_SLOTS 7
-
-typedef struct AST {
-    Token* t;
-    struct AST* sibling;
-    AST* children[AST_SLOTS];
-} AST;
+#include "ast.hpp"
 
 typedef class Parser Parser;
 
@@ -39,7 +32,6 @@ private:
     Lexer::Lexer* lexer;
     Token* t;
     AST* ast;
-    std::vector<error_t>* error_list;
     std::string* file;
     
 public:
@@ -50,6 +42,7 @@ public:
         this->lexer = new Lexer(file,this->error_list);
     };
     
+    std::vector<error_t>* error_list;
     
     AST* parse();
     void push_error(std::string err);
