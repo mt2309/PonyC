@@ -3,6 +3,8 @@
 
 #define AST_SLOTS 7
 
+#include <string>
+
 typedef enum {
     // primitives
     TK_STRING   = 0,
@@ -110,20 +112,14 @@ typedef enum {
     
 } tok_type;
 
-typedef enum Kind {
+typedef enum {
     TYPE_TRAIT,
     TYPE_ACTOR,
     TYPE_OBJECT,
     TYPE_PRIMITIVE,
-    TYPE_FUNCTION
+    TYPE_FUNCTION,
+    TYPE_DECLARE
 } Kind;
-
-typedef struct Type {
-    std::string* name;
-    std::string* type;
-    
-    Kind kind;
-} Type;
 
 typedef struct Token {
     
@@ -145,5 +141,16 @@ typedef struct AST {
     struct AST* sibling;
     std::vector<AST*>* children;
 } AST;
+
+typedef struct Type {
+    std::string name;
+    std::string type;
+    
+    Kind kind;
+    
+    AST* ast;
+} Type;
+
+
 
 #endif
