@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <boost/format.hpp>
 #include <ostream>
+#include <map>
 
 tok_type Parser::current() {
     return this->t->id;
@@ -24,6 +25,7 @@ AST* Parser::ast_new(tok_type id) {
     a->t->line = this->t->line;
     a->t->line_pos = this->t->line_pos;
     a->children = new std::vector<AST*>(AST_SLOTS);
+    a->types = new std::map<std::string, Type*>();
     return a;
 }
 

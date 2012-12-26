@@ -21,8 +21,12 @@ public:
         this->ast_list = ast;
     };
     
+    void typeCheck();
+    
+private:
     // First pass
     std::vector<Type*>* topLevelTypes();
+    
 };
 
 #endif /* defined(__ponyC__type_checker__) */

@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
     
     //Type check!
     auto typeChecker = new TypeChecker(parsedAST);
-    typeChecker->topLevelTypes();
+    typeChecker->typeCheck();
     
     return EXIT_SUCCESS;
 }

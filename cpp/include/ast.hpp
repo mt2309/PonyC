@@ -4,6 +4,7 @@
 #define AST_SLOTS 7
 
 #include <string>
+#include <map>
 
 typedef enum {
     // primitives
@@ -136,10 +137,13 @@ typedef struct Token {
     
 } Token;
 
+typedef struct Type Type;
+
 typedef struct AST {
     Token* t;
     struct AST* sibling;
     std::vector<AST*>* children;
+    std::map<std::string, Type*>* types;
 } AST;
 
 typedef struct Type {
@@ -149,6 +153,7 @@ typedef struct Type {
     Kind kind;
     
     AST* ast;
+    std::vector<std::string>* mixins;
 } Type;
 
 

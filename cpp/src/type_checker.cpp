@@ -9,6 +9,9 @@
 #include "type_checker.hpp"
 #include <iostream>
 #include <stdlib.h>
+#include <assert.h>
+
+#define debug(x)    (std::cout << x << std::endl)
 
 static std::string extractName(AST* ast) {
     if (ast->t->id == TK_TYPEID) {
@@ -28,16 +31,36 @@ static std::string extractName(AST* ast) {
     return "";
 }
 
+static std::vector<std::string>* extractMixins(AST* ast) {
+    assert(ast->t->id == TK_OBJECT
+           || ast->t->id == TK_TRAIT
+           || ast->t->id == TK_ACTOR
+           || ast->t->id == TK_DECLARE);
+    auto mixins = new std::vector<std::string>();
+    
+    if (ast->children->at(2) != nullptr) {
+        for (auto child: *ast->children->at(2)->children) {
+            if (child != nullptr) {
+                mixins->push_back(*child->children->at(0)->t->string);
+            }
+        }
+    }
+    
+    
+    return mixins;
+}
+
 static Type* newType(std::string name, std::string type, Kind k, AST* ast) {
     Type* t = (Type*)calloc(1, sizeof(Type));
     t->name = name;
     t->type = type;
     t->kind = k;
     t->ast = ast;
+    t->mixins = extractMixins(ast);
     return t;
 }
 
-static void recurseSingleAST(AST* ast, std::vector<Type*>* typeList) {
+static void recurseSingleTopAST(AST* ast, std::vector<Type*>* typeList) {
 
     if (ast == nullptr)
         return;
@@ -60,11 +83,14 @@ static void recurseSingleAST(AST* ast, std::vector<Type*>* typeList) {
             typeList->push_back(newType(extractName(ast), "", TYPE_DECLARE, ast));
         default:
             // Not a top level declaration
-            std::cout << "No top level" << std::endl;
             break;
     }
-        
-    recurseSingleAST(ast->sibling, typeList);
+    
+    for (auto children: *ast->children) {
+        recurseSingleTopAST(children, typeList);
+    }
+    
+    recurseSingleTopAST(ast->sibling, typeList);
 }
 
 std::vector<Type*>* TypeChecker::topLevelTypes() {
@@ -72,8 +98,12 @@ std::vector<Type*>* TypeChecker::topLevelTypes() {
     
     // All modules
     for (auto ast: *this->ast_list) {
-        recurseSingleAST(ast,topLevel);
+        recurseSingleTopAST(ast,topLevel);
     }
     
     return topLevel;
+}
+
+void TypeChecker::typeCheck() {
+    auto topLevelTypes = this->topLevelTypes();
 }
