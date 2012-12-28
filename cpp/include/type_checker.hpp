@@ -12,13 +12,16 @@
 #include <vector>
 #include <map>
 #include "ast.hpp"
+#include "error.hpp"
 
 class TypeChecker {
     std::vector<AST*>* ast_list;
+    std::vector<const error_t>* error_list;
     
 public:
     TypeChecker(std::vector<AST*>* ast) {
         this->ast_list = ast;
+        this->error_list = new std::vector<const error_t>();
     };
     
     void typeCheck();

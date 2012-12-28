@@ -73,8 +73,10 @@ int main(int argc, char** argv) {
         AST* ast;
         cout << "Parsing file: " << *get<0>(prog) << endl;
         ast = p->parse();
-        if (p->error_list->size() > 0)
-            cout << "Errors detected" << endl;
+        if (p->error_list->size() > 0) {
+            cout << "Errors detected, continuing parsing remainder" << endl;
+            continue;
+        }
         
         parsedAST->push_back(ast);
         delete p;
