@@ -21,6 +21,15 @@ typedef struct FullAST {
     std::vector<Type*>* topLevelDecls;
 } FullAST;
 
+FullAST* ASTnew(std::vector<std::string>* imports, AST* ast, std::vector<Type*>* topLevel) {
+    FullAST* astImport = (FullAST*)calloc(1, sizeof(FullAST));
+    astImport->imports = imports;
+    astImport->ast = ast;
+    astImport->topLevelDecls = topLevel;
+    
+    return astImport;
+}
+
 static std::string extractName(AST* ast) {
     if (ast->t->id == TK_TYPEID) {
         return *ast->t->string;
@@ -109,29 +118,35 @@ static void recurseSingleTopAST(AST* ast,
 
 void TypeChecker::topLevelTypes() {
     auto ASTimports = new std::vector<FullAST*>();
+    // mapping of module/package names to asts
     auto modules = new std::map<std::string, AST*>();
     
     // All modules
+    int i = 0;
     for (auto ast: *this->ast_list) {
+        debug(i++);
         auto topLevel = new std::vector<Type*>();
         auto import = new std::vector<std::string>();
         
         // Why can't a pony file be in several different packages?
         auto packages = new std::vector<std::string>();
-        
-        recurseSingleTopAST(ast,topLevel,import,packages);
-        
-        auto astImport = (FullAST*)calloc(1, sizeof(FullAST));
-        astImport->imports = import;
-        astImport->ast = ast;
-        
-        astImport->topLevelDecls = topLevel;
-        
+                
         for (auto package: *packages) {
             modules->insert(std::pair<std::string, AST*>(package,ast));
         }
         
-        ASTimports->push_back(astImport);
+        ASTimports->push_back(ASTnew(import,ast,topLevel));
+    }
+    
+    for (auto ast : *ASTimports) {
+        // Check imports
+        debug("");
+        for (auto import : *ast->imports) {
+            debug(import);
+            if (modules->at(import) == nullptr)
+                this->error_list->push_back(*error_new(ast->ast->t->fileName, 1, 1,
+                                                       (boost::format("Import %1% not found") % import).str()));
+        }
     }
     
     //Check mixins are all valid
@@ -153,9 +168,10 @@ void TypeChecker::topLevelTypes() {
                 }
                 if (!found) {
                     this->error_list->push_back(
-                            *error_new(type->ast->t->line,
-                            type->ast->t->line_pos,
-                            (boost::format("Trait %1% not found") % mixin).str()));
+                            *error_new(type->ast->t->fileName,
+                                       type->ast->t->line,
+                                       type->ast->t->line_pos,
+                                       (boost::format("Trait %1% not found") % mixin).str()));
                 }
             }
         }

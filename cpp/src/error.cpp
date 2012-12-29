@@ -10,8 +10,9 @@
 #include <stdlib.h>
 #include <string>
 
-const error_t* error_new(unsigned int line, unsigned int pos, std::string str) {
+const error_t* error_new(std::string prog_name, unsigned int line, unsigned int pos, std::string str) {
     error_t* err = (error_t*)calloc(1,sizeof(error_t));
+    err->prog_name = prog_name;
     err->line = line;
     err->line_pos = pos;
     err->message = str;    

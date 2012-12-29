@@ -46,21 +46,10 @@ AST* Parser::ast_expect(tok_type id) {
     return nullptr;
 }
 
-static void ast_free(AST* ast) {
-    if (ast == nullptr)
-        return;
-    if (ast->t != nullptr) { token_free(ast->t); }
-    
-    for (int i = 0; i < AST_SLOTS; i++) {
-        ast_free(ast->children->at(i));
-    }
-    
-    ast_free(ast->sibling);
-}
 
 void Parser::push_error(std::string err) {
     std::cout << "Got an error: " << err << std::endl;
-    this->error_list->push_back(*error_new(this->t->line, this->t->line_pos, err));
+    this->error_list->push_back(*error_new(this->t->fileName, this->t->line, this->t->line_pos, err));
 }
 
 bool Parser::accept(tok_type id, AST* ast , int slot) {

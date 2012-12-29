@@ -14,7 +14,7 @@
 
 #include "lexer.hpp"
 #include "error.hpp"
-#include "ast.hpp"
+#include "common.hpp"
 
 typedef class Parser Parser;
 
@@ -27,28 +27,28 @@ typedef struct alt_t{
 
 
 class Parser {
-    
+
 private:
     Lexer::Lexer* lexer;
     Token* t;
     AST* ast;
     std::string* file;
-    std::string* fileName;
-    
+    std::string fileName;
+
 public:
 
-    Parser(std::string* fileName, std::string* file) {
+    Parser(std::string fileName, std::string* file) {
         this->file = file;
         this->fileName = fileName;
         this->error_list = new std::vector<error_t>();
         this->lexer = new Lexer(fileName,file,this->error_list);
     };
-    
+
     std::vector<error_t>* error_list;
-    
+
     AST* parse();
     void push_error(std::string err);
-    
+
     tok_type current();
     bool accept(tok_type, AST*,int);
     bool expect(tok_type, AST*,int);
@@ -56,15 +56,15 @@ public:
     void rulelist(rule_t,tok_type,AST*,int);
     AST* tokenrule();
     AST* mode();
-    
+
 private:
-    
+
     AST* ast_new(tok_type id);
     AST* ast_token();
     AST* ast_expect(tok_type id);
     AST* rulealt(const std::vector<alt_t> alt_vec);
     void rulealtlist(const std::vector<alt_t> alt_vec, AST* ast, int slot);
-    
+
     AST* lambda();
     AST* typeclass();
     AST* unary();

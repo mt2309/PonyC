@@ -12,10 +12,8 @@
 #include <vector>
 #include <string>
 #include "error.hpp"
-#include "ast.hpp"
+#include "common.hpp"
 
-
-void token_free(Token*);
 
 typedef struct symbol_t {
     const std::string symbol;
@@ -25,20 +23,20 @@ typedef struct symbol_t {
 
 class Lexer {
 private:
-    std::string* fileName;
+    std::string fileName;
     std::string* m;
     size_t ptr;
     size_t len;
-    
+
     size_t line;
     size_t line_pos;
-    
+
     std::string* buffer;
-    
+
     std::vector<error_t>* error_list;
-        
+
 public:
-    Lexer(std::string*,std::string*,std::vector<error_t>*);
+    Lexer(std::string,std::string*,std::vector<error_t>*);
     Token* next();
     void adv(unsigned int);
     char look();
@@ -47,7 +45,7 @@ public:
     void append(char);
     bool appendn(size_t);
     Token* token_new();
-    
+
 private:
     void step();
     std::string* buff_copy();

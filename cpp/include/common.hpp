@@ -1,9 +1,10 @@
-#ifndef ponyC_ast_hpp
-#define ponyC_ast_hpp
+#ifndef ponyC_common_hpp
+#define ponyC_common_hpp
 
 #define AST_SLOTS 7
 
 #include <string>
+#include <vector>
 #include <map>
 
 typedef enum {
@@ -13,7 +14,7 @@ typedef enum {
     TK_FLOAT    = 2,
     TK_ID       = 3,
     TK_TYPEID   = 4,
-    
+
     // symbols
     TK_LBRACE   = 5,
     TK_RBRACE   = 6,
@@ -23,41 +24,41 @@ typedef enum {
     TK_RBRACKET = 10,
     TK_COMMA    = 11,
     TK_RESULTS  = 12,
-    
+
     TK_CALL     = 13,
     TK_PACKAGE  = 14,
     TK_OFTYPE   = 15,
     TK_PARTIAL  = 16,
     TK_ASSIGN   = 17,
     TK_BANG     = 18,
-    
+
     TK_PLUS     = 19,
     TK_MINUS    = 20,
     TK_MULTIPLY = 21,
     TK_DIVIDE   = 22,
     TK_MOD      = 23,
-    
+
     TK_LSHIFT   = 24,
     TK_RSHIFT   = 25,
-    
+
     TK_LT       = 26,
     TK_LE       = 27,
     TK_GE       = 28,
     TK_GT       = 29,
-    
+
     TK_EQ       = 30,
     TK_NOTEQ    = 31,
     TK_STEQ     = 32,
     TK_NSTEQ    = 33,
-    
+
     TK_OR       = 34,
     TK_AND      = 35,
     TK_XOR      = 36,
-    
+
     TK_UNIQ     = 37,
     TK_MUT      = 38,
     TK_MODE     = 39,
-    
+
     // keywords
     TK_USE      = 40,
     TK_DECLARE  = 41,
@@ -92,7 +93,7 @@ typedef enum {
     TK_THIS     = 70,
     TK_TRUE     = 71,
     TK_FALSE    = 72,
-    
+
     // abstract
     TK_MODULE   = 73,
     TK_DECLAREMAP=74,
@@ -106,12 +107,12 @@ typedef enum {
     TK_BLOCK    = 82,
     TK_CASEVAR  = 83,
     TK_LIST     = 84,
-    
+
     TK_SCOLON   = 85,
     TK_PACKAGEDEC = 86,
-    
+
     TK_EOF      = 87
-    
+
 } tok_type;
 
 typedef enum {
@@ -124,18 +125,18 @@ typedef enum {
 } Kind;
 
 typedef struct Token {
-    
+
     tok_type id;
     unsigned int line;
     unsigned int line_pos;
-    std::string* fileName;
-    
+    std::string fileName;
+
     union {
         std::string* string;
         double flt;
         unsigned int integer;
     };
-    
+
 } Token;
 
 typedef struct Type Type;
@@ -150,12 +151,15 @@ typedef struct AST {
 typedef struct Type {
     std::string name;
     std::string type;
-    
+
     Kind kind;
-    
+
     AST* ast;
     std::vector<std::string>* mixins;
 } Type;
+
+void token_free(Token* token);
+void ast_free(AST* ast);
 
 
 

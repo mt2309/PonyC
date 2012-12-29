@@ -6,6 +6,7 @@ cpp/src/CMakeFiles/*
 cpp/CMakeCache.txt
 cpp/CMakeScripts/*
 cpp/src/Makefile
+cpp/src/CMakeScripts/*
 cpp/Makefile
 bin/
 ponyC.build/
