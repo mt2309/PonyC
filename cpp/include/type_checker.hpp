@@ -10,7 +10,6 @@
 #define __ponyC__type_checker__
 
 #include <vector>
-#include <map>
 #include "ast.hpp"
 #include "error.hpp"
 
@@ -28,7 +27,7 @@ public:
     
 private:
     // First pass
-    std::vector<Type*>* topLevelTypes();
+    void topLevelTypes();
     
 };
 

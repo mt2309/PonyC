@@ -108,8 +108,9 @@ typedef enum {
     TK_LIST     = 84,
     
     TK_SCOLON   = 85,
+    TK_PACKAGEDEC = 86,
     
-    TK_EOF      = 86
+    TK_EOF      = 87
     
 } tok_type;
 

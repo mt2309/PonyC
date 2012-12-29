@@ -822,16 +822,24 @@ AST* Parser::use() {
     return ast;
 }
 
+AST* Parser::package() {
+    AST* ast = this->ast_expect(TK_PACKAGEDEC);
+    
+    this->expect(TK_STRING, ast, 0);
+    return ast;
+}
+
 AST* Parser::module() {
     
     static std::vector<alt_t> alt =
     {
-        { TK_USE,       &Parser::use },
-        { TK_DECLARE,   &Parser::declare },
-        { TK_TYPE,      &Parser::type },
-        { TK_TRAIT,     &Parser::trait },
-        { TK_OBJECT,    &Parser::object },
-        { TK_ACTOR,     &Parser::actor },
+        { TK_USE,           &Parser::use },
+        { TK_DECLARE,       &Parser::declare },
+        { TK_TYPE,          &Parser::type },
+        { TK_PACKAGEDEC,    &Parser::package },
+        { TK_TRAIT,         &Parser::trait },
+        { TK_OBJECT,        &Parser::object },
+        { TK_ACTOR,         &Parser::actor },
     };
     
     AST* ast = this->ast_new(TK_MODULE);

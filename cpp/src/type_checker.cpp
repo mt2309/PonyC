@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <boost/format.hpp>
+#include <map>
 
 #define debug(x)    (std::cout << x << std::endl)
 
@@ -37,26 +38,6 @@ static std::string extractName(AST* ast) {
     }
     
     return "";
-}
-
-static void extractImports(AST* ast,std::vector<std::string>* imports) {
-    if (ast == nullptr)
-        return;
-    
-    if (ast->t->id == TK_USE) {
-        // detect imports of kind:
-        // use FullyQualifedName
-        // TODO:
-        // use Type = FullyQualifiedName
-        imports->push_back(*ast->children->at(1)->t->string);
-    }
-    
-    for (auto children: *ast->children) {
-        extractImports(children, imports);
-    }
-    
-    extractImports(ast->sibling, imports);
-
 }
 
 static std::vector<std::string>* extractMixins(AST* ast) {
@@ -89,7 +70,10 @@ static Type* newType(std::string name, std::string type, Kind k, AST* ast) {
     return t;
 }
 
-static void recurseSingleTopAST(AST* ast, std::vector<Type*>* typeList) {
+static void recurseSingleTopAST(AST* ast,
+                                std::vector<Type*>* typeList,
+                                std::vector<std::string>* imports,
+                                std::vector<std::string>* package) {
 
     if (ast == nullptr)
         return;
@@ -106,32 +90,46 @@ static void recurseSingleTopAST(AST* ast, std::vector<Type*>* typeList) {
             break;
         case TK_DECLARE:
             typeList->push_back(newType(extractName(ast), "", TYPE_DECLARE, ast));
+        case TK_USE:
+            imports->push_back(*ast->children->at(1)->t->string);
+            break;
+        case TK_PACKAGEDEC:
+            package->push_back(*ast->children->at(0)->t->string);
         default:
             // Not a top level declaration
             break;
     }
     
     for (auto children: *ast->children) {
-        recurseSingleTopAST(children, typeList);
+        recurseSingleTopAST(children, typeList, imports,package);
     }
     
-    recurseSingleTopAST(ast->sibling, typeList);
+    recurseSingleTopAST(ast->sibling, typeList, imports,package);
 }
 
-std::vector<Type*>* TypeChecker::topLevelTypes() {
+void TypeChecker::topLevelTypes() {
     auto ASTimports = new std::vector<FullAST*>();
+    auto modules = new std::map<std::string, AST*>();
+    
     // All modules
     for (auto ast: *this->ast_list) {
         auto topLevel = new std::vector<Type*>();
-        recurseSingleTopAST(ast,topLevel);
-        
         auto import = new std::vector<std::string>();
-        extractImports(ast, import);
+        
+        // Why can't a pony file be in several different packages?
+        auto packages = new std::vector<std::string>();
+        
+        recurseSingleTopAST(ast,topLevel,import,packages);
         
         auto astImport = (FullAST*)calloc(1, sizeof(FullAST));
         astImport->imports = import;
         astImport->ast = ast;
+        
         astImport->topLevelDecls = topLevel;
+        
+        for (auto package: *packages) {
+            modules->insert(std::pair<std::string, AST*>(package,ast));
+        }
         
         ASTimports->push_back(astImport);
     }
@@ -144,9 +142,7 @@ std::vector<Type*>* TypeChecker::topLevelTypes() {
                 bool found = false;
                 // O(n^2)!
                 for (auto t: *ast->imports) {
-                    debug(t);
                     if (mixin.compare(t) == 0) {
-                        debug("Found\timport");
                         found = true;
                     }
                 }
@@ -167,7 +163,7 @@ std::vector<Type*>* TypeChecker::topLevelTypes() {
 }
 
 void TypeChecker::typeCheck() {
-    auto topLevelTypes = this->topLevelTypes();
+    this->topLevelTypes();
     
     if (this->error_list->size() > 0) {
         std::cout << "Errors detected in top level" << std::endl;
