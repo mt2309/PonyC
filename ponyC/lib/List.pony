@@ -1,3 +1,5 @@
+package "List"
+
 trait Iterable[T] {
   function hasNext()->(x:Boolean)
   function next()->(x:T) throws
