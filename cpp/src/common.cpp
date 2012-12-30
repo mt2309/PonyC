@@ -22,7 +22,7 @@ void ast_free(AST* ast) {
     return;
   if (ast->t != nullptr) { token_free(ast->t); }
 
-  for (int i = 0; i < AST_SLOTS; i++) {
+  for (size_t i = 0; i < AST_SLOTS; i++) {
     ast_free(ast->children->at(i));
   }
 

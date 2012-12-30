@@ -10,9 +10,17 @@
 #include "error.hpp"
 #include <stdlib.h>
 #include <assert.h>
-#include <boost/format.hpp>
 #include <ostream>
 #include <map>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wweak-vtables"
+#pragma GCC diagnostic ignored "-Wpadded"
+#pragma GCC diagnostic ignored "-Wdisabled-macro-expansion"
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
+#include <boost/format.hpp>
+#pragma GCC diagnostic pop
 
 tok_type Parser::current() {
     return this->t->id;
@@ -68,14 +76,14 @@ bool Parser::accept(tok_type id, AST* ast , int slot) {
     return true;
 }
 
-bool Parser::expect(tok_type t , AST* ast ,int slot) {
+bool Parser::expect(tok_type id , AST* ast ,int slot) {
     
     
-    if (this->accept(t, ast, slot)) {
+    if (this->accept(id, ast, slot)) {
         return true;
     }
         
-    this->push_error((boost::format("Expected %1%, got %2%") % t % this->current()).str());
+    this->push_error((boost::format("Expected %1%, got %2%") % id % this->current()).str());
     return false;
     
 }
@@ -89,7 +97,7 @@ void Parser::rule(rule_t f, AST* ast, int slot) {
     ast->children->at(slot) = child;
 }
 
-void Parser::rulelist(rule_t rule, tok_type t, AST* ast, int slot) {
+void Parser::rulelist(rule_t rule, tok_type id, AST* ast, int slot) {
     assert(ast != nullptr);
     assert(slot >= 0);
     assert(slot < AST_SLOTS);
@@ -107,7 +115,7 @@ void Parser::rulelist(rule_t rule, tok_type t, AST* ast, int slot) {
         else
             ast->children->at(slot) = child;
         
-        if (!this->accept(t, ast, -1))
+        if (!this->accept(id, ast, -1))
             return;
         
         last = child;
@@ -844,7 +852,7 @@ AST* Parser::parse() {
     
     this->t = this->lexer->next();
     
-    this->ast = this->module();
+    this->m_ast = this->module();
     
     if (this->error_list->size() != 0) {
         std::cout << "Parse errors detected:" << std::endl;
@@ -855,5 +863,5 @@ AST* Parser::parse() {
                 % err.message << std::endl;
         }
     }
-    return this->ast;
+    return this->m_ast;
 }

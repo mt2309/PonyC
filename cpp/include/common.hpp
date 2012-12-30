@@ -126,16 +126,17 @@ typedef enum {
 
 typedef struct Token {
 
-    tok_type id;
-    unsigned int line;
-    unsigned int line_pos;
+    size_t line;
+    size_t line_pos;
     std::string fileName;
 
     union {
         std::string* string;
         double flt;
-        unsigned int integer;
+        size_t integer;
     };
+    
+    tok_type id;
 
 } Token;
 

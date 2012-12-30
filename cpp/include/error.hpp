@@ -13,11 +13,11 @@
 
 typedef struct error_t {
     std::string prog_name;
-    unsigned int line;
-    unsigned int line_pos;
+    size_t line;
+    size_t line_pos;
     std::string message;
 } error_t;
 
-const error_t* error_new(std::string, unsigned int, unsigned int, std::string);
+const error_t* error_new(std::string, size_t, size_t, std::string);
 
 #endif

@@ -10,8 +10,16 @@
 #include <iostream>
 #include <stdlib.h>
 #include <assert.h>
-#include <boost/format.hpp>
 #include <map>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wweak-vtables"
+#pragma GCC diagnostic ignored "-Wpadded"
+#pragma GCC diagnostic ignored "-Wdisabled-macro-expansion"
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
+#include <boost/format.hpp>
+#pragma GCC diagnostic pop
 
 #define debug(x)    (std::cout << x << std::endl)
 
@@ -21,7 +29,7 @@ typedef struct FullAST {
     std::vector<Type*>* topLevelDecls;
 } FullAST;
 
-FullAST* ASTnew(std::vector<std::string>* imports, AST* ast, std::vector<Type*>* topLevel) {
+static FullAST* ASTnew(std::vector<std::string>* imports, AST* ast, std::vector<Type*>* topLevel) {
     FullAST* astImport = (FullAST*)calloc(1, sizeof(FullAST));
     astImport->imports = imports;
     astImport->ast = ast;
@@ -122,14 +130,14 @@ void TypeChecker::topLevelTypes() {
     auto modules = new std::map<std::string, AST*>();
     
     // All modules
-    int i = 0;
     for (auto ast: *this->ast_list) {
-        debug(i++);
         auto topLevel = new std::vector<Type*>();
         auto import = new std::vector<std::string>();
         
         // Why can't a pony file be in several different packages?
         auto packages = new std::vector<std::string>();
+        
+        recurseSingleTopAST(ast, topLevel, import, packages);
                 
         for (auto package: *packages) {
             modules->insert(std::pair<std::string, AST*>(package,ast));
@@ -140,7 +148,6 @@ void TypeChecker::topLevelTypes() {
     
     for (auto ast : *ASTimports) {
         // Check imports
-        debug("");
         for (auto import : *ast->imports) {
             debug(import);
             if (modules->at(import) == nullptr)

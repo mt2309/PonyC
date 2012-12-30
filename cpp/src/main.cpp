@@ -1,9 +1,23 @@
 #include <iostream>
 #include <fstream>
 #include <tuple>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
+#pragma GCC diagnostic ignored "-Wweak-vtables"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wconditional-uninitialized"
+#pragma GCC diagnostic ignored "-Wexit-time-destructors"
+#pragma GCC diagnostic ignored "-Wglobal-constructors"
+#pragma GCC diagnostic ignored "-Wc++98-compat"
+#pragma GCC diagnostic ignored "-Wundef"
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
+#pragma GCC diagnostic pop
 
 #include "parser.hpp"
 #include "type_checker.hpp"
@@ -18,16 +32,15 @@ using namespace std;
 
 typedef string program_name;
 
-string stages = 
-R"(Stage 1: parser
-Stage 2: typer
-Stage 3: code-gen)";
-
 string read_file(string file_name);
 vector<tuple<program_name,string*>>* get_files_directory(string dir);
 
 int main(int argc, char** argv) {
-    
+    string stages =
+    R"(Stage 1: parser
+    Stage 2: typer
+    Stage 3: code-gen)";
+
     po::options_description options("Allowed Options");
     options.add_options()
         ("help", "print usage message")
@@ -94,7 +107,7 @@ int main(int argc, char** argv) {
 
 // TODO:
 // handle files being missing
-string* read_file(fs::path path) {
+static string* read_file(fs::path path) {
     ifstream infile(path.string().c_str());
     stringstream stream;
     stream << infile.rdbuf();
@@ -102,7 +115,7 @@ string* read_file(fs::path path) {
     return new string(stream.str());
 }
 
-void recurse_dir(fs::path p, vector<tuple<program_name,string*>>* vec) {
+static void recurse_dir(fs::path p, vector<tuple<program_name,string*>>* vec) {
     
     if (!fs::exists(p)) {
         cout << "Directory " << p.root_path() << " not found" << endl;

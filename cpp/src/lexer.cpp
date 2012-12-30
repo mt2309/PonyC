@@ -14,9 +14,17 @@
 #include <string>
 #include <stdlib.h>
 #include <math.h>
-#include <boost/format.hpp>
 
-static const std::vector<symbol_t> symbols2 = {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wweak-vtables"
+#pragma GCC diagnostic ignored "-Wpadded"
+#pragma GCC diagnostic ignored "-Wdisabled-macro-expansion"
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
+#include <boost/format.hpp>
+#pragma GCC diagnostic pop
+
+ const std::vector<const symbol_t> Lexer::symbols2 = {
     { "->", TK_RESULTS },
     { "::", TK_PACKAGE },
     
@@ -34,7 +42,7 @@ static const std::vector<symbol_t> symbols2 = {
     { ">=", TK_GE },
 };
 
-static const std::vector<symbol_t> symbols1 = {
+const std::vector<const symbol_t> Lexer::symbols1 = {
     { "{", TK_LBRACE },
     { "}", TK_RBRACE },
     { "(", TK_LPAREN },
@@ -68,7 +76,7 @@ static const std::vector<symbol_t> symbols1 = {
     { ";", TK_SCOLON }
 };
 
-static const std::vector<symbol_t> keywords = {
+const std::vector<const symbol_t> Lexer::keywords = {
     { "use", TK_USE },
     { "declare", TK_DECLARE },
     { "type", TK_TYPE },
@@ -106,7 +114,6 @@ static const std::vector<symbol_t> keywords = {
 };
 
 void Lexer::push_error(std::string err) {
-    std::cout << "Got an error: " << err << std::endl;
     this->error_list->push_back(*error_new(this->fileName, this->line, this->line_pos, err));
 }
 
@@ -117,7 +124,7 @@ static bool isSymbol(char c) {
     || ((c >= '{') && (c <= '~'));
 }
 
-void Lexer::adv(unsigned int count) {
+void Lexer::adv(size_t count) {
     assert(this->len >= count);
     
     this->ptr += count;
@@ -155,19 +162,19 @@ void Lexer::append(char c) {
     this->buffer->append(1, c);
 }
 
-bool Lexer::appendn(size_t len) {
+bool Lexer::appendn(size_t length) {
     
     size_t prev_pos = this->ptr;
     uint32_t c = 0;
     
-    if (this->len < len) {
+    if (this->len < length) {
         this->string_terminate();
         return false;
     }
     
-    this->adv(len);
+    this->adv(length);
     
-    for (unsigned int i = prev_pos; i < (len+prev_pos); i++) {
+    for (size_t i = prev_pos; i < (len+prev_pos); i++) {
         c <<= 4;
         
         if( (this->m->at(i) >= '0') && (this->m->at(i) <= '9') ) {
@@ -375,7 +382,6 @@ Token* Lexer::lexer_string() {
             this->step();
         }
     }
-    return nullptr;
 }
 
 Token* Lexer::real(size_t v) {
@@ -772,8 +778,8 @@ Token* Lexer::next() {
     return t;
 }
 
-Lexer::Lexer(std::string fileName, std::string* input, std::vector<error_t>* list) {
-    this->fileName = fileName;
+Lexer::Lexer(std::string _fileName, std::string* input, std::vector<error_t>* list) {
+    this->fileName = _fileName;
     this->m = input;
     this->len = input->size();
     this->line = 1;
@@ -781,4 +787,4 @@ Lexer::Lexer(std::string fileName, std::string* input, std::vector<error_t>* lis
     this->ptr = 0;
     this->error_list = list;
     this->buffer = new std::string("");
-};
+}
