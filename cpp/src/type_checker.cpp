@@ -29,6 +29,12 @@ typedef struct FullAST {
     std::vector<Type*>* topLevelDecls;
 } FullAST;
 
+typedef struct Import {
+    std::string* importedAs;
+    std::string* importName;
+    AST* ast;
+} Import;
+
 static FullAST* ASTnew(std::vector<std::string>* imports, AST* ast, std::vector<Type*>* topLevel) {
     FullAST* astImport = (FullAST*)calloc(1, sizeof(FullAST));
     astImport->imports = imports;
@@ -89,7 +95,7 @@ static Type* newType(std::string name, std::string type, Kind k, AST* ast) {
 
 static void recurseSingleTopAST(AST* ast,
                                 std::vector<Type*>* typeList,
-                                std::vector<std::string>* imports,
+                                std::vector<Import*>* imports,
                                 std::vector<std::string>* package) {
 
     if (ast == nullptr)
@@ -108,26 +114,27 @@ static void recurseSingleTopAST(AST* ast,
         case TK_DECLARE:
             typeList->push_back(newType(extractName(ast), "", TYPE_DECLARE, ast));
         case TK_USE:
+            if (ast->children->at(0) != nullptr && ast->children->at(0)->t->id == TK_TYPEID) {
+                
+            }
             imports->push_back(*ast->children->at(1)->t->string);
             break;
-        case TK_PACKAGEDEC:
-            package->push_back(*ast->children->at(0)->t->string);
         default:
             // Not a top level declaration
             break;
     }
     
     for (auto children: *ast->children) {
-        recurseSingleTopAST(children, typeList, imports,package);
+        recurseSingleTopAST(children, typeList, imports, package);
     }
     
-    recurseSingleTopAST(ast->sibling, typeList, imports,package);
+    recurseSingleTopAST(ast->sibling, typeList, imports, package);
 }
 
 void TypeChecker::topLevelTypes() {
     auto ASTimports = new std::vector<FullAST*>();
     // mapping of module/package names to asts
-    auto modules = new std::map<std::string, AST*>();
+    auto modules = new std::map<std::string, FullAST*>();
     
     // All modules
     for (auto ast: *this->ast_list) {
@@ -138,12 +145,14 @@ void TypeChecker::topLevelTypes() {
         auto packages = new std::vector<std::string>();
         
         recurseSingleTopAST(ast, topLevel, import, packages);
+        
+        auto full = ASTnew(import,ast,topLevel);
                 
         for (auto package: *packages) {
-            modules->insert(std::pair<std::string, AST*>(package,ast));
+            modules->insert(std::pair<std::string, FullAST*>(package,full));
         }
         
-        ASTimports->push_back(ASTnew(import,ast,topLevel));
+        ASTimports->push_back(full);
     }
     
     for (auto ast : *ASTimports) {

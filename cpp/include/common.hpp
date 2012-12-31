@@ -109,9 +109,8 @@ typedef enum {
     TK_LIST     = 84,
 
     TK_SCOLON   = 85,
-    TK_PACKAGEDEC = 86,
 
-    TK_EOF      = 87
+    TK_EOF      = 86
 
 } tok_type;
 
@@ -121,6 +120,7 @@ typedef enum {
     TYPE_OBJECT,
     TYPE_PRIMITIVE,
     TYPE_FUNCTION,
+    TYPE_IMPORT,
     TYPE_DECLARE
 } Kind;
 

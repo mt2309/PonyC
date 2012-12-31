@@ -108,7 +108,6 @@ private:
     AST* declaremap();
     AST* declare();
     AST* use();
-    AST* package();
     AST* module();
     AST* mode_receiver();
 };

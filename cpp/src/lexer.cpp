@@ -110,7 +110,6 @@ const std::vector<const symbol_t> Lexer::keywords = {
     { "this", TK_THIS },
     { "true", TK_TRUE },
     { "false", TK_FALSE },
-    { "package", TK_PACKAGEDEC },
 };
 
 void Lexer::push_error(std::string err) {
