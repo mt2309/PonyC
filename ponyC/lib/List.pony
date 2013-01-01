@@ -1,3 +1,5 @@
+use Array = Primitive::Array
+
 trait Iterable[T] {
   function hasNext()->(x:Boolean)
   function next()->(x:T) throws

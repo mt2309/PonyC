@@ -1,5 +1,3 @@
-package "stdint"
-
 // Skeleton top level types for primitive ints
 object Int64 {}
 object Int32 {}
