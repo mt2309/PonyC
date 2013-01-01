@@ -814,7 +814,7 @@ AST* Parser::use() {
     if( this->accept(TK_TYPEID, ast, 0 ) )
         this->expect(TK_ASSIGN, ast, -1 );
     
-    this->expect(TK_STRING, ast, 1 );
+    this->expect(TK_TYPEID, ast, 1 );
     return ast;
 }
 

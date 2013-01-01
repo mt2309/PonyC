@@ -635,10 +635,33 @@ void Lexer::read_id() {
     {
         c = this->look();
         
-        if((c == '_') || isalnum( c ))
+        if((c == '_') || isalnum(c))
         {
             this->append(c);
             this->step();
+        } else {
+            break;
+        }
+    }
+}
+
+void Lexer::read_type() {
+    char c;
+    while (this->len > 0) {
+        c = this->look();
+        
+        if ((c == '_') || isalnum(c)) {
+            this->append(c);
+            this->step();
+        } else if (c == ':') {
+            this->step();
+            
+            if ((this->len > 0) && (this->look() == ':')) {
+                this->append(':'); this->append(':');
+                this->step();
+            } else {
+                this->push_error("Unterminated type found");
+            }
         } else {
             break;
         }
@@ -666,7 +689,7 @@ Token* Lexer::identifier() {
 }
 
 Token* Lexer::type_id() {
-    this->read_id();
+    this->read_type();
     
     Token* t = this->token_new();
     t->id = TK_TYPEID;
