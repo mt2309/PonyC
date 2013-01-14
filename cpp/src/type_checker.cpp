@@ -128,23 +128,27 @@ static void recurseSingleTopAST(AST* ast,
 void TypeChecker::topLevelTypes() {
     auto fullASTs = new std::vector<FullAST*>();
     // mapping of type names to asts
-    // Pretty sure this means one global namespace
-    // Right now this will be broken, since we should consider the case of:
-    // use List = 
-    auto modules = new std::map<std::string, Type*>();
+    // Pretty sure this means one global namespace for top
+    // level types. Using qualifiers such as Collection::List
+    // should help prevent this.
+    auto modules = new std::map<std::string, FullAST*>();
     
     // All compilation units
     for (auto ast: *this->ast_list) {
+        
+        // Collections holding topLevel types
+        // and the imports.
         auto topLevel = new std::vector<Type*>();
         auto imports = new std::vector<Import*>();
 
         recurseSingleTopAST(ast, topLevel, imports);
         
+        auto fullAST = ASTnew(imports, ast, topLevel);
+        
         for (auto type: *topLevel) {
-            modules->insert(std::pair<std::string, Type*>(type->name,type));
+            modules->insert(std::pair<std::string, FullAST*>(type->name,fullAST));
         }
         
-        auto fullAST = ASTnew(imports, ast, topLevel);
         fullASTs->push_back(fullAST);
     }
     
@@ -154,9 +158,10 @@ void TypeChecker::topLevelTypes() {
         // Check imports
         for (auto import : *ast->imports) {
             debug(*import->importName);
-            if (modules->at(*import->importName) == nullptr)
+            if (modules->at(*import->importName) == nullptr) {
                 this->error_list->push_back(*error_new(ast->ast->t->fileName, 1, 1,
                                                        (boost::format("Import %1% not found") % import).str()));
+            }
         }
     }
     
