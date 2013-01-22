@@ -33,7 +33,7 @@ using namespace std;
 typedef string program_name;
 
 string read_file(string file_name);
-vector<tuple<program_name,string*>>* get_files_directory(string dir);
+vector<tuple<program_name,string>>* get_files_directory(string dir);
 
 int main(int argc, char** argv) {
     string stages =
@@ -77,8 +77,8 @@ int main(int argc, char** argv) {
     // Discussion needed on multi-file compilation
     string input = vm["input"].as<vector<string>>().front();
     
-    vector<tuple<program_name,string*>>* program_text = get_files_directory(input);
-    auto parsedAST = new vector<AST*>();
+    auto program_text = get_files_directory(input);
+    auto parsedAST = vector<AST*>();
 
     for(auto & prog : *program_text) {
             
@@ -86,12 +86,12 @@ int main(int argc, char** argv) {
         AST* ast;
         cout << "Parsing file: " << get<0>(prog) << endl;
         ast = p->parse();
-        if (p->error_list->size() > 0) {
+        if (p->error_list.size() > 0) {
             cout << "Errors detected, continuing parsing remainder" << endl;
             continue;
         }
         
-        parsedAST->push_back(ast);
+        parsedAST.push_back(ast);
         delete p;
     }
     
@@ -107,15 +107,15 @@ int main(int argc, char** argv) {
 
 // TODO:
 // handle files being missing
-static string* read_file(fs::path path) {
+static string read_file(fs::path path) {
     ifstream infile(path.string().c_str());
     stringstream stream;
     stream << infile.rdbuf();
     
-    return new string(stream.str());
+    return string(stream.str());
 }
 
-static void recurse_dir(fs::path p, vector<tuple<program_name,string*>>* vec) {
+static void recurse_dir(fs::path p, vector<tuple<program_name,string>>* vec) {
     
     if (!fs::exists(p)) {
         cout << "Directory " << p.root_path() << " not found" << endl;
@@ -134,9 +134,9 @@ static void recurse_dir(fs::path p, vector<tuple<program_name,string*>>* vec) {
     }
 }
 
-vector<tuple<program_name,string*>>* get_files_directory(string dir) {
+vector<tuple<program_name,string>>* get_files_directory(string dir) {
     fs::path p(dir);
-    auto vec = new vector<tuple<program_name,string*>>();
+    auto vec = new vector<tuple<program_name,string>>();
     
     recurse_dir(p, vec);
     

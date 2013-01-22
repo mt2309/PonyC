@@ -32,19 +32,19 @@ private:
     Lexer::Lexer* lexer;
     Token* t;
     AST* m_ast;
-    std::string* program_text;
+    std::string program_text;
     std::string file_name;
 
 public:
 
-    Parser(std::string _file_name, std::string* file) {
+    Parser(std::string _file_name, std::string file) {
         this->program_text = file;
         this->file_name = _file_name;
-        this->error_list = new std::vector<error_t>();
+        this->error_list = std::vector<error_t>();
         this->lexer = new Lexer(_file_name,file,this->error_list);
     };
 
-    std::vector<error_t>* error_list;
+    std::vector<error_t> error_list;
 
     AST* parse();
     void push_error(std::string err);

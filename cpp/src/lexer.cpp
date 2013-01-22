@@ -113,7 +113,7 @@ const std::vector<const symbol_t> Lexer::keywords = {
 };
 
 void Lexer::push_error(std::string err) {
-    this->error_list->push_back(*error_new(this->fileName, this->line, this->line_pos, err));
+    this->error_list.push_back(*error_new(this->fileName, this->line, this->line_pos, err));
 }
 
 static bool isSymbol(char c) {
@@ -137,15 +137,14 @@ void Lexer::step() {
 
 char Lexer::look() {
     assert(this->len > 0);
-    return this->m->at(this->ptr);
+    return this->m.at(this->ptr);
 }
 
-std::string* Lexer::buff_copy() {
-    if (this->buffer->size() == 0)
+std::string Lexer::buff_copy() {
+    if (this->buffer.size() == 0)
         return nullptr;
-    std::string* ret = new std::string(*this->buffer);
-    delete this->buffer;
-    this->buffer = new std::string("");
+    std::string ret = std::string(this->buffer);
+    this->buffer = std::string("");
     return ret;
 }
 
@@ -153,12 +152,11 @@ void Lexer::string_terminate() {
     this->push_error("Unterminated string");
     this->ptr += this->len;
     this->len = 0;
-    delete this->buffer;
-    this->buffer = new std::string("");
+    this->buffer = std::string("");
 }
 
 void Lexer::append(char c) {
-    this->buffer->append(1, c);
+    this->buffer.append(1, c);
 }
 
 bool Lexer::appendn(size_t length) {
@@ -176,12 +174,12 @@ bool Lexer::appendn(size_t length) {
     for (size_t i = prev_pos; i < (len+prev_pos); i++) {
         c <<= 4;
         
-        if( (this->m->at(i) >= '0') && (this->m->at(i) <= '9') ) {
-            c += this->m->at(i) - '0';
-        } else if( (this->m->at(i) >= 'a') && (this->m->at(i) <= 'f') ) {
-            c += this->m->at(i) - 'a';
-        } else if( (this->m->at(i) >= 'A') && (this->m->at(i) <= 'F') ) {
-            c += this->m->at(i) - 'A';
+        if( (this->m.at(i) >= '0') && (this->m.at(i) <= '9') ) {
+            c += this->m.at(i) - '0';
+        } else if( (this->m.at(i) >= 'a') && (this->m.at(i) <= 'f') ) {
+            c += this->m.at(i) - 'a';
+        } else if( (this->m.at(i) >= 'A') && (this->m.at(i) <= 'F') ) {
+            c += this->m.at(i) - 'A';
         } else {
             this->push_error((boost::format("Escape sequence contains non-hexadecimal value %1%") % c).str());
             return false;
@@ -291,7 +289,7 @@ Token* Lexer::lexer_slash() {
 Token* Lexer::lexer_string() {
     
     this->step();
-    assert(this->buffer->size() == 0);
+    assert(this->buffer.size() == 0);
     
     while (true) {
         if (this->len == 0)
@@ -675,10 +673,9 @@ Token* Lexer::identifier() {
     this->read_id();
     
     for ( auto p : keywords) {
-        if (!this->buffer->compare(p.symbol)) {
+        if (!this->buffer.compare(p.symbol)) {
             t->id = p.id;
-            delete this->buffer;
-            this->buffer = new std::string("");
+            this->buffer = std::string("");
             return t;
         }
     }
@@ -800,13 +797,13 @@ Token* Lexer::next() {
     return t;
 }
 
-Lexer::Lexer(std::string _fileName, std::string* input, std::vector<error_t>* list) {
+Lexer::Lexer(std::string _fileName, std::string input, std::vector<error_t> list) {
     this->fileName = _fileName;
     this->m = input;
-    this->len = input->size();
+    this->len = input.size();
     this->line = 1;
     this->line_pos = 1;
     this->ptr = 0;
     this->error_list = list;
-    this->buffer = new std::string("");
+    this->buffer = std::string("");
 }

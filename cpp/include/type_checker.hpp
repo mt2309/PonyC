@@ -15,26 +15,26 @@
 
 
 typedef struct Import {
-    std::string* importedAs;
-    std::string* importName;
+    std::string importedAs;
+    std::string importName;
     AST* ast;
 } Import;
 
 typedef struct FullAST {
     AST* ast;
-    std::vector<Import*>* imports;
-    std::vector<Type*>* topLevelDecls;
+    std::vector<Import*> imports;
+    std::vector<Type*> topLevelDecls;
 } FullAST;
 
 
 class TypeChecker {
-    std::vector<AST*>* ast_list;
-    std::vector<const error_t>* error_list;
+    std::vector<AST*> ast_list;
+    std::vector<const error_t> error_list;
 
 public:
-    TypeChecker(std::vector<AST*>* ast) {
+    TypeChecker(std::vector<AST*> ast) {
         this->ast_list = ast;
-        this->error_list = new std::vector<const error_t>();
+        this->error_list = std::vector<const error_t>();
     };
 
     void typeCheck();

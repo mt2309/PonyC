@@ -131,7 +131,7 @@ typedef struct Token {
     std::string fileName;
 
     union {
-        std::string* string;
+        std::string string;
         double flt;
         size_t integer;
     };
@@ -145,8 +145,8 @@ typedef struct Type Type;
 typedef struct AST {
     Token* t;
     struct AST* sibling;
-    std::vector<AST*>* children;
-    std::map<std::string, Type*>* types;
+    std::vector<AST*> children;
+    std::map<std::string, Type*> types;
 } AST;
 
 typedef struct Type {
@@ -156,7 +156,7 @@ typedef struct Type {
     Kind kind;
 
     AST* ast;
-    std::vector<std::string>* mixins;
+    std::vector<std::string> mixins;
 } Type;
 
 void token_free(Token* token);

@@ -28,24 +28,24 @@ private:
     static const std::vector<const symbol_t> keywords;
 
     std::string fileName;
-    std::string* m;
+    std::string m;
     size_t ptr;
     size_t len;
 
     size_t line;
     size_t line_pos;
 
-    std::string* buffer;
+    std::string buffer;
 
-    std::vector<error_t>* error_list;
+    std::vector<error_t> error_list;
 
 public:
-    Lexer(std::string,std::string*,std::vector<error_t>*);
+    Lexer(std::string,std::string,std::vector<error_t>);
     
     Token* next();
     void adv(size_t);
     char look();
-    std::string* copy();
+    std::string copy();
     void string_terminate();
     void append(char);
     bool appendn(size_t);
@@ -53,7 +53,7 @@ public:
 
 private:
     void step();
-    std::string* buff_copy();
+    std::string buff_copy();
     void push_error(std::string err);
     Token* real(size_t v);
     Token* hexadecimal();
