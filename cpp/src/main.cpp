@@ -138,7 +138,11 @@ vector<tuple<program_name,string>>* get_files_directory(string dir) {
     fs::path p(dir);
     auto vec = new vector<tuple<program_name,string>>();
     
-    recurse_dir(p, vec);
+    if (!fs::is_directory(p) && p.extension() == FILE_EXTENSION) {
+            vec->push_back(make_tuple(p.string(), read_file(p)));
+    }
+    else
+        recurse_dir(p, vec);
     
     return vec;
 }
