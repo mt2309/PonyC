@@ -141,6 +141,7 @@ typedef struct Token {
 } Token;
 
 typedef struct Type Type;
+typedef struct ClassContents ClassContents;
 
 typedef struct AST {
     Token* t;
@@ -157,7 +158,12 @@ typedef struct Type {
 
     AST* ast;
     std::vector<std::string> mixins;
+    std::vector<ClassContents*> contents;
 } Type;
+
+typedef struct ClassContents {
+    
+} ClassContents;
 
 void token_free(Token* token);
 void ast_free(AST* ast);

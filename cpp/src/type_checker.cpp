@@ -71,7 +71,7 @@ static std::vector<std::string> extractMixins(AST* ast) {
     return mixins;
 }
 
-static Type* newType(AST* ast, std::string type, Kind k) {
+static Type* newType(AST* ast, std::string type, Kind k, std::vector<ClassContents*> contents) {
     Type* t = (Type*)calloc(1, sizeof(Type));
     
     t->ast = ast;
@@ -79,7 +79,43 @@ static Type* newType(AST* ast, std::string type, Kind k) {
     t->type = type;
     t->kind = k;
     t->mixins = extractMixins(ast);
+    t->contents = contents;
     return t;
+}
+
+static std::vector<ClassContents*> collectFunctions(AST* ast) {
+    auto contents = std::vector<ClassContents*>();
+    
+    AST* node = ast;
+    
+    while (node != nullptr) {
+        switch (node->t->id) {
+            case TK_VAR:
+                debug("var declaration");
+                break;
+            case TK_DELEGATE:
+                debug("delegate");
+                break;
+            case TK_NEW:
+                debug("constructor");
+                break;
+            case TK_AMBIENT:
+                debug("ambient");
+                break;
+            case TK_FUNCTION:
+                debug("function");
+                break;
+            case TK_MESSAGE:
+                debug("message");
+                break;
+            default:
+                break;
+        }
+        
+        node = node->sibling;
+    }
+    
+    return contents;
 }
 
 static void recurseSingleTopAST(AST* ast,
@@ -91,16 +127,18 @@ static void recurseSingleTopAST(AST* ast,
     
     switch (ast->t->id) {
         case TK_OBJECT:
-            typeList.push_back(newType(ast,"",TYPE_OBJECT));
-            break;
+            debug("object");
+            typeList.push_back(newType(ast,"",TYPE_OBJECT,collectFunctions(ast->children.at(3)->children.at(0))));
+            return;
         case TK_TRAIT:
-            typeList.push_back(newType(ast,"", TYPE_TRAIT));
-            break;
+            typeList.push_back(newType(ast,"", TYPE_TRAIT,collectFunctions(ast->children.at(3)->children.at(0))));
+            return;
         case TK_ACTOR:
-            typeList.push_back(newType(ast, "", TYPE_ACTOR));
-            break;
+            typeList.push_back(newType(ast, "", TYPE_ACTOR,collectFunctions(ast->children.at(3)->children.at(0))));
+            return;
         case TK_DECLARE:
-            typeList.push_back(newType(ast, "", TYPE_DECLARE));
+            typeList.push_back(newType(ast, "", TYPE_DECLARE,collectFunctions(ast)));
+            return;
         case TK_USE:
         {
             Import* import = (Import*)calloc(1, sizeof(Import));
@@ -111,7 +149,7 @@ static void recurseSingleTopAST(AST* ast,
                 import->importedAs = nullptr;
             }
             imports.push_back(import);
-            break;
+            return;
         }
         default:
             // Not a top level declaration
@@ -135,6 +173,8 @@ void TypeChecker::topLevelTypes() {
     
     // All compilation units
     for (auto ast: this->ast_list) {
+        
+        std::cout << "Typechecking file: " << ast->t->fileName << std::endl;
         
         // Collections holding topLevel types
         // and the imports.
