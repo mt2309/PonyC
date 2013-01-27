@@ -24,7 +24,7 @@
 #include <boost/format.hpp>
 #pragma GCC diagnostic pop
 
- const std::vector<const symbol_t> Lexer::symbols2 = {
+const std::vector<const symbol_t> Lexer::symbols2 = {
     { "->", TK_RESULTS },
     { "::", TK_PACKAGE },
     
