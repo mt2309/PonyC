@@ -75,8 +75,6 @@ bool Parser::accept(tok_type id, AST* ast , int slot) {
 }
 
 bool Parser::expect(tok_type id , AST* ast ,int slot) {
-    
-    
     if (this->accept(id, ast, slot)) {
         return true;
     }
