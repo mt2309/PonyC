@@ -124,6 +124,15 @@ typedef enum {
     TYPE_DECLARE
 } Kind;
 
+typedef enum {
+    CN_VAR,
+    CN_DELEGATE,
+    CN_NEW,
+    CN_AMBIENT,
+    CN_FUNCTION,
+    CN_MESSAGE
+} Content;
+
 typedef struct Token {
 
     size_t line;
@@ -142,6 +151,32 @@ typedef struct Token {
 
 typedef struct Type Type;
 typedef struct ClassContents ClassContents;
+
+typedef struct Variable {
+    std::string name;
+    std::string type;
+    
+} Variable;
+
+typedef struct Delegate {
+
+} Delegate;
+
+typedef struct C_New {
+
+} C_New;
+
+typedef struct Ambient {
+
+} Ambient;
+
+typedef struct Function {
+
+} Function;
+
+typedef struct Message {
+
+} Message;
 
 typedef struct AST {
     Token* t;
@@ -162,6 +197,18 @@ typedef struct Type {
 } Type;
 
 typedef struct ClassContents {
+    AST* ast;
+    Content type;
+    
+    // hacky subtyping
+    union {
+        Variable* variable;
+        Delegate* delegate;
+        C_New* c_new;
+        Ambient* ambient;
+        Function* function;
+        Message* message;
+    };
     
 } ClassContents;
 

@@ -83,6 +83,12 @@ static Type* newType(AST* ast, std::string type, Kind k, std::vector<ClassConten
     return t;
 }
 
+static ClassContents* newContents(AST* ast) {
+    ClassContents* c = (ClassContents*)calloc(1, sizeof(ClassContents));
+    c->ast = ast;
+    return c;
+}
+
 static std::vector<ClassContents*> collectFunctions(AST* ast) {
     auto contents = std::vector<ClassContents*>();
     
@@ -92,6 +98,7 @@ static std::vector<ClassContents*> collectFunctions(AST* ast) {
         switch (node->t->id) {
             case TK_VAR:
                 debug("var declaration");
+                contents.push_back(newContents(node));
                 break;
             case TK_DELEGATE:
                 debug("delegate");
@@ -127,7 +134,6 @@ static void recurseSingleTopAST(AST* ast,
     
     switch (ast->t->id) {
         case TK_OBJECT:
-            debug("object");
             typeList.push_back(newType(ast,"",TYPE_OBJECT,collectFunctions(ast->children.at(3)->children.at(0))));
             return;
         case TK_TRAIT:
