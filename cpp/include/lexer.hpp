@@ -61,7 +61,6 @@ private:
     Token* binary();
     Token* number();
     void read_id();
-    void read_type();
     Token* identifier();
     Token* type_id();
     Token* symbol();
