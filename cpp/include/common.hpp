@@ -3,9 +3,15 @@
 
 #define AST_SLOTS 7
 
+#include <boost/filesystem.hpp>
+
 #include <string>
 #include <vector>
 #include <map>
+
+#define FILE_EXTENSION ".pony"
+
+namespace fs = boost::filesystem;
 
 typedef enum {
     // primitives
@@ -215,6 +221,9 @@ typedef struct ClassContents {
 void token_free(Token* token);
 void ast_free(AST* ast);
 
+typedef std::string program_name;
 
+void recurse_dir(fs::path p, std::vector<std::tuple<program_name,std::string>>* vec);
+std::vector<std::tuple<program_name,std::string>>* get_files_directory(std::string dir);
 
 #endif

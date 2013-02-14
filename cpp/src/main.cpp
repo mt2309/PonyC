@@ -15,25 +15,17 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wmissing-noreturn"
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/foreach.hpp>
 #pragma GCC diagnostic pop
 
+#include "common.hpp"
 #include "parser.hpp"
 #include "type_checker.hpp"
 #include "code_gen.hpp"
 
-#define FILE_EXTENSION ".pony"
-
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
 using namespace std;
 
-typedef string program_name;
-
-string read_file(string file_name);
-vector<tuple<program_name,string>>* get_files_directory(string dir);
 
 int main(int argc, char** argv) {
     string stages =
@@ -52,7 +44,6 @@ int main(int argc, char** argv) {
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, options), vm);
     po::notify(vm);
-    
 
     if (vm.count("help")) {
         cout << options << endl;
@@ -104,47 +95,4 @@ int main(int argc, char** argv) {
     
     return EXIT_SUCCESS;
 }
-
-// TODO:
-// handle files being missing
-static string read_file(fs::path path) {
-    ifstream infile(path.string().c_str());
-    stringstream stream;
-    stream << infile.rdbuf();
-    
-    return string(stream.str());
-}
-
-static void recurse_dir(fs::path p, vector<tuple<program_name,string>>* vec) {
-    
-    if (!fs::exists(p)) {
-        cout << "Directory " << p.root_path() << " not found" << endl;
-        exit(EXIT_FAILURE);
-    }
-        
-    fs::directory_iterator end_it;
-    
-    for(fs::directory_iterator itr(p); itr != end_it; itr++) {
-        if (fs::is_directory(itr->status())) {
-            recurse_dir(itr->path(), vec);
-        } else if (itr->path().extension() == FILE_EXTENSION) {
-            vec->push_back(make_tuple(itr->path().string(),
-                                 read_file(itr->path())));
-        }
-    }
-}
-
-vector<tuple<program_name,string>>* get_files_directory(string dir) {
-    fs::path p(dir);
-    auto vec = new vector<tuple<program_name,string>>();
-    
-    if (!fs::is_directory(p) && p.extension() == FILE_EXTENSION) {
-            vec->push_back(make_tuple(p.string(), read_file(p)));
-    }
-    else
-        recurse_dir(p, vec);
-    
-    return vec;
-}
-
 
