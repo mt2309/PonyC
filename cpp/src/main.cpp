@@ -17,10 +17,7 @@
 #include <boost/program_options.hpp>
 #pragma GCC diagnostic pop
 
-#include "common.hpp"
-#include "parser.hpp"
-#include "type_checker.hpp"
-#include "code_gen.hpp"
+#include "Loader.hpp"
 
 namespace po = boost::program_options;
 
@@ -60,7 +57,7 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
     
-    int stage = INT32_MAX;
+    int stage = INT_MAX;
     
     if (vm.count("stage"))
         stage = vm["stage"].as<int>();
@@ -68,31 +65,22 @@ int main(int argc, char** argv) {
     // Discussion needed on multi-file compilation
     string input = vm["input"].as<vector<string>>().front();
     
-    auto program_text = get_files_directory(input);
-    auto parsedAST = vector<AST*>();
-
-    for(auto & prog : *program_text) {
-            
-        Parser* p = new Parser(get<0>(prog),get<1>(prog));
-        AST* ast;
-        cout << "Parsing file: " << get<0>(prog) << endl;
-        ast = p->parse();
-        if (p->error_list.size() > 0) {
-            cout << "Errors detected, continuing parsing remainder" << endl;
-            continue;
-        }
-        
-        parsedAST.push_back(ast);
-        delete p;
+    auto unit = Loader::Load(input, stage);
+    
+    if (unit == nullptr) {
+        cerr << "Starting directory: " << input << " was not found!" << endl;
     }
     
-    if (stage == 1)
-        return EXIT_SUCCESS;
-    
-    //Type check!
-    auto typeChecker = new TypeChecker(parsedAST);
-    typeChecker->typeCheck();
+    unit->buildUnit();
     
     return EXIT_SUCCESS;
 }
+
+/*
+ Marina Abramovic and Ulay started an intense love story in the 70s, performing art out of the van they lived in. When they felt the relationship had run its course, they decided to walk the Great Wall of China, each from one end, meeting for one last big hug in the middle and never seeing each other again. 
+ 
+ At her 2010 MoMa retrospective Marina performed ‘The Artist Is Present’ as part of the show, a minute of silence with each stranger who sat in front of her. Ulay arrived without her knowing it and this is what happened.  http://www.youtube.com/watch?v=XNcWRbh8wQ
+ 
+ */
+ 
 

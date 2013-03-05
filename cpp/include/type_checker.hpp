@@ -10,38 +10,26 @@
 #define __ponyC__type_checker__
 
 #include <vector>
+#include "CompilationUnit.hpp"
 #include "common.hpp"
 #include "error.hpp"
 
 
-typedef struct Import {
-    std::string importedAs;
-    std::string importName;
-    AST* ast;
-} Import;
-
-typedef struct FullAST {
-    AST* ast;
-    std::vector<Import*> imports;
-    std::vector<Type*> topLevelDecls;
-} FullAST;
-
-
 class TypeChecker {
+    const CompilationUnit* unit;
     std::vector<AST*> ast_list;
     std::vector<const error_t> error_list;
 
 public:
-    TypeChecker(std::vector<AST*> ast) {
-        this->ast_list = ast;
-        this->error_list = std::vector<const error_t>();
-    };
+    TypeChecker(CompilationUnit* _unit) : unit(_unit), ast_list(_unit->astList) {}
 
     void typeCheck();
 
 private:
     // First pass
     void topLevelTypes();
+    void recurseSingleTopAST(AST* ast, std::vector<Type*> typeList, std::vector<Import*> imports);
+
 
 };
 

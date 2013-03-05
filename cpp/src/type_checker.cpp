@@ -7,6 +7,8 @@
 //
 
 #include "type_checker.hpp"
+#include "CompilationUnit.hpp"
+#include "Loader.hpp"
 #include <iostream>
 #include <stdlib.h>
 #include <assert.h>
@@ -125,7 +127,7 @@ static std::vector<ClassContents*> collectFunctions(AST* ast) {
     return contents;
 }
 
-static void recurseSingleTopAST(AST* ast,
+void TypeChecker::recurseSingleTopAST(AST* ast,
                                 std::vector<Type*> typeList,
                                 std::vector<Import*> imports) {
 
@@ -143,17 +145,20 @@ static void recurseSingleTopAST(AST* ast,
             typeList.push_back(newType(ast, "", TYPE_ACTOR,collectFunctions(ast->children.at(3)->children.at(0))));
             return;
         case TK_DECLARE:
+            // Are declarations types? (yes - mappings from one type to another)
             typeList.push_back(newType(ast, "", TYPE_DECLARE,collectFunctions(ast)));
             return;
         case TK_USE:
         {
-            Import* import = (Import*)calloc(1, sizeof(Import));
-            import->importName = ast->children.at(1)->t->string;
-            if (ast->children.at(0) != nullptr && ast->children.at(0)->t->id == TK_TYPEID) {
-                import->importedAs = ast->children.at(0)->t->string;
-            } else {
-                import->importedAs = nullptr;
-            }
+            // this is all wrong. all wrong.
+            
+            // firstly what is an import? Collection of ASTs and exported types?
+            Import* import = new Import;
+            std::string importName = ast->children.at(1)->t->string;
+            auto package = Loader::Load(this->unit->directoryName, importName);
+
+            // For now don't both with the type-id
+            
             imports.push_back(import);
             return;
         }

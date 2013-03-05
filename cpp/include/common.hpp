@@ -218,6 +218,18 @@ typedef struct ClassContents {
     
 } ClassContents;
 
+typedef struct Import {
+    std::string importedAs;
+    std::string importName;
+    AST* ast;
+} Import;
+
+typedef struct FullAST {
+    AST* ast;
+    std::vector<Import*> imports;
+    std::vector<Type*> topLevelDecls;
+} FullAST;
+
 void token_free(Token* token);
 void ast_free(AST* ast);
 
