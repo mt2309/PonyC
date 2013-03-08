@@ -13,6 +13,22 @@ static CompilationUnit* privateLoad(fs::path p, int stage) {
     }
 }
 
+static fs::path createPath(std::string currentPath, std::string relativePath) {
+    
+    if (relativePath.length() > 0) {
+        if (relativePath.at(0) != '/') {
+            return fs::path(currentPath + std::string("/") + relativePath);
+        } else {
+            return fs::path(relativePath);
+        }
+    }
+    
+    // Return an empty path (perhaps).
+    fs::path p;
+    
+    return p;
+}
+
 CompilationUnit* Loader::Load(std::string path, int stage) {
     fs::path newPath(path);
     
@@ -33,8 +49,9 @@ CompilationUnit* Loader::Load(std::string currentPath, std::string relativePath)
      If its an absolute path we can simply use the initial 
      
     */
-    fs::path newPath(currentPath + std::string("/") + relativePath);
+    fs::path newPath = createPath(currentPath, relativePath);
     
+        
     if (!exists(newPath)) {
         std::cerr << "Tried to load directory/file " << newPath.string() << " but it was not found" << std::endl;
         return nullptr;
