@@ -4,6 +4,6 @@ object X {
 
 object Y {
   function main() {
-    y:X = new X;
+    y:X = new X
   }
 }
