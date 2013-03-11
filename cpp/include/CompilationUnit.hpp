@@ -7,17 +7,17 @@
 class CompilationUnit {
 
 private:
-    std::vector<FullAST*> fullASTList;
         
     int stage;
     
 public:
-    
+    std::vector<FullAST*> fullASTList;
+
     const std::string directoryName;
     
     std::vector<AST*> astList;
     
-    CompilationUnit(std::string name, int _stage): directoryName(name), stage(_stage) {}
+    CompilationUnit(std::string name, int _stage): stage(_stage), directoryName(name) {}
     
     void buildUnit();
 };

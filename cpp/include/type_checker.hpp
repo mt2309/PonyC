@@ -17,20 +17,22 @@
 
 class TypeChecker {
     const CompilationUnit* unit;
-    std::vector<AST*> ast_list;
-    std::vector<const error_t> error_list;
+    std::vector<AST*> astList;
+    std::vector<FullAST*> fullASTList;
+    std::vector<const error_t> errorList;
 
 public:
-    TypeChecker(CompilationUnit* _unit) : unit(_unit), ast_list(_unit->astList) {}
+    TypeChecker(CompilationUnit* _unit) : unit(_unit), astList(_unit->astList), errorList() {}
 
     void typeCheck();
 
 private:
     // First pass
     void topLevelTypes();
-    void recurseSingleTopAST(AST* ast, std::vector<Type*> typeList, std::vector<Import*> imports);
-
-
+    void checkMixins();
+    void recurseSingleTopAST(AST* ast, std::vector<Type*> typeList, std::vector<CompilationUnit*> imports);
+    bool checkMixin(std::string mixin, FullAST* ast);
+    void checkNameClashes();
 };
 
 #endif /* defined(__ponyC__type_checker__) */

@@ -139,21 +139,39 @@ typedef enum {
     CN_MESSAGE
 } Content;
 
-typedef struct Token {
-
-    size_t line;
-    size_t line_pos;
+class Token {
+    
+public:
     std::string fileName;
-
+    size_t line;
+    size_t linePos;
+    
     union {
-        std::string string;
+        std::string* string;
         double flt;
         size_t integer;
     };
     
     tok_type id;
+    
+    Token(std::string file, size_t l, size_t lp) : fileName(file), line(l), linePos(lp) {}
+};
 
-} Token;
+//Token {
+//
+//    size_t line;
+//    size_t line_pos;
+//    std::string* fileName;
+//
+//    union {
+//        std::string* string;
+//        double flt;
+//        size_t integer;
+//    };
+//    
+//    tok_type id;
+//
+//} Token;
 
 typedef struct Type Type;
 typedef struct ClassContents ClassContents;
@@ -192,8 +210,7 @@ typedef struct AST {
 } AST;
 
 typedef struct Type {
-    std::string name;
-    std::string type;
+    std::string* name;
 
     Kind kind;
 
@@ -218,16 +235,14 @@ typedef struct ClassContents {
     
 } ClassContents;
 
-typedef struct Import {
-    std::string importedAs;
-    std::string importName;
-    AST* ast;
-} Import;
+// forward declare CompilationUnit
+
+typedef class CompilationUnit CompilationUnit;
 
 typedef struct FullAST {
     AST* ast;
-    std::vector<Import*> imports;
-    std::vector<Type*> topLevelDecls;
+    std::vector<CompilationUnit*>* imports;
+    std::vector<Type*>* topLevelDecls;
 } FullAST;
 
 void token_free(Token* token);

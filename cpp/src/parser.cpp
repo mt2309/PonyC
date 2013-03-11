@@ -26,11 +26,8 @@ tok_type Parser::current() {
 }
 
 AST* Parser::ast_new(tok_type id) {
-    AST* a = (AST*)calloc(1, sizeof(AST));
-    a->t = (Token*)calloc(1, sizeof(Token));
-    a->t->id = id;
-    a->t->line = this->t->line;
-    a->t->line_pos = this->t->line_pos;
+    AST* a = new AST;
+    a->t = new Token(this->file_name, this->t->line, this->t->linePos);
     a->children = std::vector<AST*>(AST_SLOTS);
     a->types = std::map<std::string, Type*>();
     return a;
@@ -55,7 +52,7 @@ AST* Parser::ast_expect(tok_type id) {
 
 
 void Parser::push_error(std::string err) {
-    this->error_list.push_back(*error_new(this->t->fileName, this->t->line, this->t->line_pos, err));
+    this->error_list.push_back(*error_new(this->t->fileName, this->t->line, this->t->linePos, err));
 }
 
 bool Parser::accept(tok_type id, AST* ast , int slot) {

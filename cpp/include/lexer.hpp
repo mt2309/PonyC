@@ -53,7 +53,7 @@ public:
 
 private:
     void step();
-    std::string buff_copy();
+    std::string* buff_copy();
     void push_error(std::string err);
     Token* real(size_t v);
     Token* hexadecimal();

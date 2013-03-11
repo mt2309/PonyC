@@ -12,7 +12,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <assert.h>
-#include <map>
+#include <set>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-conversion"
@@ -25,8 +25,8 @@
 
 #define debug(x)    (std::cout << x << std::endl)
 
-static FullAST* ASTnew(std::vector<Import*> imports, AST* ast, std::vector<Type*> topLevel) {
-    FullAST* astImport = (FullAST*)calloc(1, sizeof(FullAST));
+static FullAST* ASTnew(std::vector<CompilationUnit*>* imports, AST* ast, std::vector<Type*>* topLevel) {
+    FullAST* astImport = new FullAST;
     astImport->imports = imports;
     astImport->ast = ast;
     astImport->topLevelDecls = topLevel;
@@ -34,23 +34,23 @@ static FullAST* ASTnew(std::vector<Import*> imports, AST* ast, std::vector<Type*
     return astImport;
 }
 
-static std::string extractName(AST* ast) {
+static std::string* extractName(AST* ast) {
     if (ast->t->id == TK_TYPEID) {
         return ast->t->string;
     }
     
-    std::string res;
+    std::string* res;
     
     for (auto children: ast->children) {
         if (children == nullptr)
             continue;
         res = extractName(children);
-        if (res.compare("") != 0) {
+        if (res->compare("") != 0) {
             return res;
         }
     }
     
-    return "";
+    return nullptr;
 }
 
 static std::vector<std::string> extractMixins(AST* ast) {
@@ -65,7 +65,7 @@ static std::vector<std::string> extractMixins(AST* ast) {
         for (auto child: ast->children.at(2)->children) {
             if (child != nullptr) {
                 // Heh, hacky
-                mixins.push_back(child->children.at(0)->t->string);
+                mixins.push_back(*child->children.at(0)->t->string);
             }
         }
     }
@@ -73,12 +73,11 @@ static std::vector<std::string> extractMixins(AST* ast) {
     return mixins;
 }
 
-static Type* newType(AST* ast, std::string type, Kind k, std::vector<ClassContents*> contents) {
-    Type* t = (Type*)calloc(1, sizeof(Type));
+static Type* newType(AST* ast, Kind k, std::vector<ClassContents*> contents) {
+    Type* t = new Type;
     
     t->ast = ast;
     t->name = extractName(ast);
-    t->type = type;
     t->kind = k;
     t->mixins = extractMixins(ast);
     t->contents = contents;
@@ -129,37 +128,34 @@ static std::vector<ClassContents*> collectFunctions(AST* ast) {
 
 void TypeChecker::recurseSingleTopAST(AST* ast,
                                 std::vector<Type*> typeList,
-                                std::vector<Import*> imports) {
+                                std::vector<CompilationUnit*> imports) {
 
     if (ast == nullptr)
         return;
     
     switch (ast->t->id) {
         case TK_OBJECT:
-            typeList.push_back(newType(ast,"",TYPE_OBJECT,collectFunctions(ast->children.at(3)->children.at(0))));
+            typeList.push_back(newType(ast,TYPE_OBJECT,collectFunctions(ast->children.at(3)->children.at(0))));
             return;
         case TK_TRAIT:
-            typeList.push_back(newType(ast,"", TYPE_TRAIT,collectFunctions(ast->children.at(3)->children.at(0))));
+            typeList.push_back(newType(ast,TYPE_TRAIT,collectFunctions(ast->children.at(3)->children.at(0))));
             return;
         case TK_ACTOR:
-            typeList.push_back(newType(ast, "", TYPE_ACTOR,collectFunctions(ast->children.at(3)->children.at(0))));
+            typeList.push_back(newType(ast, TYPE_ACTOR,collectFunctions(ast->children.at(3)->children.at(0))));
             return;
         case TK_DECLARE:
             // Are declarations types? (yes - mappings from one type to another)
-            typeList.push_back(newType(ast, "", TYPE_DECLARE,collectFunctions(ast)));
+            typeList.push_back(newType(ast, TYPE_DECLARE,collectFunctions(ast)));
             return;
         case TK_USE:
-        {
-            // this is all wrong. all wrong.
-            
-            // firstly what is an import? Collection of ASTs and exported types?
-            Import* import = new Import;
-            std::string importName = ast->children.at(1)->t->string;
+        {            
+            std::string importName = *ast->children.at(1)->t->string;
             auto package = Loader::Load(this->unit->directoryName, importName);
+            package->buildUnit();
 
             // For now don't both with the type-id
             
-            imports.push_back(import);
+            imports.push_back(package);
             return;
         }
         default:
@@ -174,87 +170,99 @@ void TypeChecker::recurseSingleTopAST(AST* ast,
     recurseSingleTopAST(ast->sibling, typeList, imports);
 }
 
-void TypeChecker::topLevelTypes() {
-    auto fullASTs = std::vector<FullAST*>();
-    // mapping of type names to asts
-    // Pretty sure this means one global namespace for top
-    // level types. Using qualifiers such as Collection::List
-    // should help prevent this.
-    auto modules = new std::map<std::string, FullAST*>();
-    
-    // All compilation units
-    for (auto ast: this->ast_list) {
-        
-        std::cout << "Typechecking file: " << ast->t->fileName << std::endl;
-        
-        // Collections holding topLevel types
-        // and the imports.
-        auto topLevel = std::vector<Type*>();
-        auto imports = std::vector<Import*>();
-
-        recurseSingleTopAST(ast, topLevel, imports);
-        
-        auto fullAST = ASTnew(imports, ast, topLevel);
-        
-        for (auto type: topLevel) {
-            modules->insert(std::pair<std::string, FullAST*>(type->name,fullAST));
-        }
-        
-        fullASTs.push_back(fullAST);
-    }
-    
-    
-    // Verify each import maps to an AST node.
-    for (auto ast : fullASTs) {
-        // Check imports
-        for (auto import : ast->imports) {
-            debug(import->importName);
-            if (modules->at(import->importName) == nullptr) {
-                this->error_list.push_back(*error_new(ast->ast->t->fileName, 1, 1,
-                                                       (boost::format("Import %1% not found") % import).str()));
+bool TypeChecker::checkMixin(std::string mixin, FullAST* ast) {
+    // Look up type in AST List
+    for (auto f : fullASTList) {
+        for (auto type : *f->topLevelDecls) {
+            if (type->name->compare(mixin) == 0) {
+                return true;
             }
         }
     }
     
-    //Check mixins are all valid
-    for (auto ast: fullASTs) {
-        for (auto type: ast->topLevelDecls) {
-            // For each trait mixed in, check for presence in global types.
-            for (auto mixin : type->mixins) {
-                bool found = false;
-                // O(n^2)!
-                for (auto t: ast->imports) {
-                    if (mixin.compare(t->importName) == 0) {
-                        found = true;
-                    }
+    // Then look it up in the imports
+    for (auto compilationUnit : *ast->imports) {
+        for (auto f : compilationUnit->fullASTList) {
+            for (auto type : *f->topLevelDecls) {
+                if (type->name->compare(mixin) == 0) {
+                    return true;
                 }
-                for (auto t: ast->topLevelDecls) {
-                    if ((mixin.compare(t->name) == 0) && (t->kind == TYPE_TRAIT)) {
-                        found = true;
-                    }
-                }
-                if (!found) {
-                    this->error_list.push_back(
-                            *error_new(type->ast->t->fileName,
-                                       type->ast->t->line,
-                                       type->ast->t->line_pos,
-                                       (boost::format("Trait %1% not found") % mixin).str()));
+            }
+        }
+    }
+    
+    return false;
+}
+
+void TypeChecker::checkMixins() {
+    for (auto fullAST : fullASTList) {
+        for (auto top : *fullAST->topLevelDecls) {
+            
+            // For every mixin check its existence
+            for (auto mixin : top->mixins) {
+                if (!this->checkMixin(mixin, fullAST)) {
+                    this->errorList.push_back(*error_new(fullAST->ast->t->fileName, top->ast->t->line, top->ast->t->linePos,
+                                                        (boost::format("Mixin %1% not found in current path") % mixin).str()));
                 }
             }
         }
     }
 }
 
+void TypeChecker::checkNameClashes() {
+    std::set<std::string> names;
+    
+    for (auto ast : this->fullASTList) {
+        for (auto type : *ast->topLevelDecls) {
+            auto name = type->name;
+            debug(name);
+            
+            if (names.find(*name) == names.end()) {
+                names.insert(*name);
+                debug(name);
+            }
+            else {
+                this->errorList.push_back(*error_new(type->ast->t->fileName, type->ast->t->line, type->ast->t->linePos,
+                                                     (boost::format("Name clash %1% not found in current path") % name).str()));
+            }
+        }
+    }
+}
+
+void TypeChecker::topLevelTypes() {
+    fullASTList = std::vector<FullAST*>();
+    
+    // All compilation units
+    for (auto ast: this->astList) {
+        
+        std::cout << "Typechecking file: " << ast->t->fileName << std::endl;
+        
+        // Collections holding topLevel types
+        // and the imports.
+        auto topLevel = new std::vector<Type*>;
+        auto imports = new std::vector<CompilationUnit*>;
+
+        recurseSingleTopAST(ast, *topLevel, *imports);
+        
+        auto fullAST = ASTnew(imports, ast, topLevel);
+        
+        fullASTList.push_back(fullAST);
+    }
+    
+    this->checkMixins();
+    this->checkNameClashes();
+}
+
 void TypeChecker::typeCheck() {
     this->topLevelTypes();
     
-    if (this->error_list.size() > 0) {
+    if (this->errorList.size() > 0) {
         std::cout << "Errors detected in top level" << std::endl;
     }
     
     // do more type detection here
     
-    for (auto error: this->error_list) {
+    for (auto error: this->errorList) {
         std::cout << "Error at " << error.line << ":" << error.line_pos << "\t" << error.message << std::endl;
     }
 }

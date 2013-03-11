@@ -6,6 +6,7 @@
 
 namespace fs = boost::filesystem;
 
+// Currently no assertion that imports are a DAG
 class Loader {
 
   public:
