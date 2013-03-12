@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 
+typedef std::string program_name;
 
 class CompilationUnit {
 

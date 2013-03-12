@@ -223,6 +223,4 @@ public:
     FullAST(AST* a, std::vector<CompilationUnit*> i, std::vector<Type*> t) : ast(a), imports(i), topLevelDecls(t) {}
 };
 
-typedef std::string program_name;
-
 #endif
