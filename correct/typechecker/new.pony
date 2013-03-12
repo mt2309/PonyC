@@ -1,11 +1,11 @@
-object X {
+object New {
 
 }
 
-object Y {
+object NewO {
 
-  var x:X
+  var x:New
   function main() {
-    x = X
+    x = New
   }
 }

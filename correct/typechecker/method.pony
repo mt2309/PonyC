@@ -1,13 +1,13 @@
-object X {
+object M {
   function method()->() {
     //does nothing
   }
 }
 
-object Y {
+object M1 {
 
   function main()->() {
-    x = X
+    x = M
     x.method()
   }
 }

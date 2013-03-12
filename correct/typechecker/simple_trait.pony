@@ -1,7 +1,7 @@
-trait X {
+trait Trait {
 
 }
 
-object Y is X {
+object Object is Trait {
 
 }

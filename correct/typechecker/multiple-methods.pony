@@ -1,4 +1,4 @@
-object X {
+object MM {
 
   function meth() {
   }
