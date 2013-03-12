@@ -55,6 +55,7 @@ static void extractMixins(AST* ast, std::vector<std::string> &mixins) {
         for (auto child: ast->children.at(2)->children) {
             if (child != nullptr) {
                 // Heh, hacky
+                debug("mixin found");
                 mixins.push_back(child->children.at(0)->t->string);
             }
         }
@@ -73,7 +74,7 @@ static Type* newType(AST* ast, Kind k, std::vector<ClassContents*> contents) {
 }
 
 static ClassContents* newContents(AST* ast) {
-    ClassContents* c = (ClassContents*)calloc(1, sizeof(ClassContents));
+    ClassContents* c = new ClassContents;
     c->ast = ast;
     return c;
 }
@@ -123,18 +124,21 @@ void TypeChecker::recurseSingleTopAST(AST* ast,
     
     switch (ast->t->id) {
         case TokenType::TK_OBJECT:
+            debug("object");
             typeList.push_back(newType(ast, Kind::TYPE_OBJECT,collectFunctions(ast->children.at(3)->children.at(0))));
-            return;
+            break;
         case TokenType::TK_TRAIT:
+            debug("trait");
             typeList.push_back(newType(ast, Kind::TYPE_TRAIT,collectFunctions(ast->children.at(3)->children.at(0))));
-            return;
+            break;
         case TokenType::TK_ACTOR:
+            debug("actor");
             typeList.push_back(newType(ast, Kind::TYPE_ACTOR,collectFunctions(ast->children.at(3)->children.at(0))));
-            return;
+            break;
         case TokenType::TK_DECLARE:
             // Are declarations types? (yes - mappings from one type to another)
             typeList.push_back(newType(ast, Kind::TYPE_DECLARE,collectFunctions(ast)));
-            return;
+            break;
         case TokenType::TK_USE:
         {            
             std::string importName = ast->children.at(1)->t->string;
@@ -144,11 +148,13 @@ void TypeChecker::recurseSingleTopAST(AST* ast,
             // For now don't both with the type-id
             
             imports.push_back(package);
-            return;
+            break;
         }
+        case TokenType::TK_MODULE:
+            break;
         default:
             // Not a top level declaration
-            break;
+            return;
     }
     
     for (auto children: ast->children) {
