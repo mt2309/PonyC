@@ -26,10 +26,7 @@ tok_type Parser::current() {
 }
 
 AST* Parser::ast_new(tok_type id) {
-    AST* a = new AST;
-    a->t = new Token(this->file_name, this->t->line, this->t->linePos);
-    a->children = std::vector<AST*>(AST_SLOTS);
-    a->types = std::map<std::string, Type*>();
+    AST* a = new AST(nullptr, new Token(this->file_name, this->t->line, this->t->linePos, id));
     return a;
 }
 
@@ -64,7 +61,7 @@ bool Parser::accept(tok_type id, AST* ast , int slot) {
         AST* child = this->ast_token();
         ast->children.at(slot) = child;
     } else {
-        token_free(this->t);
+        delete this->t;
         this->t = this->lexer->next();
     }
     

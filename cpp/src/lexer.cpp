@@ -140,12 +140,12 @@ char Lexer::look() {
     return this->m.at(this->ptr);
 }
 
-std::string* Lexer::buff_copy() {
+std::string Lexer::buff_copy() {
     if (this->buffer.size() == 0)
         return nullptr;
     std::string ret = std::string(this->buffer);
     this->buffer = std::string("");
-    return new std::string(ret);
+    return std::string(ret);
 }
 
 void Lexer::string_terminate() {
@@ -211,9 +211,6 @@ bool Lexer::appendn(size_t length) {
 Token* Lexer::token_new() {
     Token* tok = new Token(this->fileName, this->line, this->line_pos);
     
-//    tok->fileName = new std::string(this->fileName);
-//    tok->line = this->line;
-//    tok->line_pos = this->line_pos;
     return tok;
 }
 

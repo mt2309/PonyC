@@ -13,7 +13,7 @@
 
 namespace fs = boost::filesystem;
 
-typedef enum {
+enum class TokenType {
     // primitives
     TK_STRING   = 0,
     TK_INT      = 1,
@@ -118,9 +118,9 @@ typedef enum {
 
     TK_EOF      = 86
 
-} tok_type;
+};
 
-typedef enum {
+enum class Kind {
     TYPE_TRAIT,
     TYPE_ACTOR,
     TYPE_OBJECT,
@@ -128,16 +128,16 @@ typedef enum {
     TYPE_FUNCTION,
     TYPE_IMPORT,
     TYPE_DECLARE
-} Kind;
+};
 
-typedef enum {
+enum class Content {
     CN_VAR,
     CN_DELEGATE,
     CN_NEW,
     CN_AMBIENT,
     CN_FUNCTION,
     CN_MESSAGE
-} Content;
+};
 
 class Token {
     
@@ -147,7 +147,7 @@ public:
     size_t linePos;
     
     union {
-        std::string* string;
+        std::string string;
         double flt;
         size_t integer;
     };
@@ -155,32 +155,12 @@ public:
     tok_type id;
     
     Token(std::string file, size_t l, size_t lp) : fileName(file), line(l), linePos(lp) {}
+    Token(std::string file, size_t l, size_t lp, tok_type t) : fileName(file), line(l), linePos(lp), id(t) {}
+    ~Token() {}
 };
 
-//Token {
-//
-//    size_t line;
-//    size_t line_pos;
-//    std::string* fileName;
-//
-//    union {
-//        std::string* string;
-//        double flt;
-//        size_t integer;
-//    };
-//    
-//    tok_type id;
-//
-//} Token;
-
-typedef struct Type Type;
-typedef struct ClassContents ClassContents;
-
-typedef struct Variable {
-    std::string name;
-    std::string type;
-    
-} Variable;
+typedef class Type Type;
+typedef class ClassContents ClassContents;
 
 typedef struct Delegate {
 
@@ -202,51 +182,45 @@ typedef struct Message {
 
 } Message;
 
-typedef struct AST {
+class AST {
+    
+public:
     Token* t;
-    struct AST* sibling;
+    AST* sibling;
     std::vector<AST*> children;
-    std::map<std::string, Type*> types;
-} AST;
+    AST(AST* s, Token* _t) : t(_t), sibling(s) {
+        children = std::vector<AST*>(AST_SLOTS);
+    }
+};
 
-typedef struct Type {
-    std::string* name;
+class Type {
+    
+public:
+    std::string name;
 
     Kind kind;
 
     AST* ast;
     std::vector<std::string> mixins;
     std::vector<ClassContents*> contents;
-} Type;
+    
+    Type(std::string n, Kind k, AST* a, std::vector<std::string> m, std::vector<ClassContents*> c) : name(n), kind(k), ast(a), mixins(m), contents(c) {}
+};
 
-typedef struct ClassContents {
-    AST* ast;
-    Content type;
-    
-    // hacky subtyping
-    union {
-        Variable* variable;
-        Delegate* delegate;
-        C_New* c_new;
-        Ambient* ambient;
-        Function* function;
-        Message* message;
-    };
-    
-} ClassContents;
 
 // forward declare CompilationUnit
 
 typedef class CompilationUnit CompilationUnit;
 
-typedef struct FullAST {
-    AST* ast;
-    std::vector<CompilationUnit*>* imports;
-    std::vector<Type*>* topLevelDecls;
-} FullAST;
+class FullAST {
 
-void token_free(Token* token);
-void ast_free(AST* ast);
+public:
+    AST* ast;
+    std::vector<CompilationUnit*> imports;
+    std::vector<Type*> topLevelDecls;
+    
+    FullAST(AST* a, std::vector<CompilationUnit*> i, std::vector<Type*> t) : ast(a), imports(i), topLevelDecls(t) {}
+};
 
 typedef std::string program_name;
 
