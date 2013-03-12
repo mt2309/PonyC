@@ -25,91 +25,91 @@
 #pragma GCC diagnostic pop
 
 const std::vector<const symbol_t> Lexer::symbols2 = {
-    { "->", TK_RESULTS },
-    { "::", TK_PACKAGE },
+    { "->", TokenType::TK_RESULTS },
+    { "::", TokenType::TK_PACKAGE },
     
-    { "<<", TK_LSHIFT },
-    { ">>", TK_RSHIFT },
+    { "<<", TokenType::TK_LSHIFT },
+    { ">>", TokenType::TK_RSHIFT },
     
-    { "==", TK_EQ },
-    { "!=", TK_NOTEQ },
-    { "#=", TK_STEQ },
-    { "~=", TK_NSTEQ },
+    { "==", TokenType::TK_EQ },
+    { "!=", TokenType::TK_NOTEQ },
+    { "#=", TokenType::TK_STEQ },
+    { "~=", TokenType::TK_NSTEQ },
     
-    { "[:", TK_MODE },
+    { "[:", TokenType::TK_MODE },
     
-    { "<=", TK_LE },
-    { ">=", TK_GE },
+    { "<=", TokenType::TK_LE },
+    { ">=", TokenType::TK_GE },
 };
 
 const std::vector<const symbol_t> Lexer::symbols1 = {
-    { "{", TK_LBRACE },
-    { "}", TK_RBRACE },
-    { "(", TK_LPAREN },
-    { ")", TK_RPAREN },
-    { "[", TK_LBRACKET },
-    { "]", TK_RBRACKET },
-    { ",", TK_COMMA },
+    { "{", TokenType::TK_LBRACE },
+    { "}", TokenType::TK_RBRACE },
+    { "(", TokenType::TK_LPAREN },
+    { ")", TokenType::TK_RPAREN },
+    { "[", TokenType::TK_LBRACKET },
+    { "]", TokenType::TK_RBRACKET },
+    { ",", TokenType::TK_COMMA },
     
-    { ".", TK_CALL },
-    { ":", TK_OFTYPE },
-    { "\\", TK_PARTIAL },
-    { "=", TK_ASSIGN },
-    { "!", TK_BANG },
+    { ".", TokenType::TK_CALL },
+    { ":", TokenType::TK_OFTYPE },
+    { "\\", TokenType::TK_PARTIAL },
+    { "=", TokenType::TK_ASSIGN },
+    { "!", TokenType::TK_BANG },
     
-    { "+", TK_PLUS },
-    { "-", TK_MINUS },
-    { "*", TK_MULTIPLY },
-    { "/", TK_DIVIDE },
-    { "%", TK_MOD },
+    { "+", TokenType::TK_PLUS },
+    { "-", TokenType::TK_MINUS },
+    { "*", TokenType::TK_MULTIPLY },
+    { "/", TokenType::TK_DIVIDE },
+    { "%", TokenType::TK_MOD },
     
-    { "<", TK_LT },
-    { ">", TK_GT },
+    { "<", TokenType::TK_LT },
+    { ">", TokenType::TK_GT },
     
-    { "|", TK_OR },
-    { "&", TK_AND },
-    { "^", TK_XOR },
+    { "|", TokenType::TK_OR },
+    { "&", TokenType::TK_AND },
+    { "^", TokenType::TK_XOR },
     
-    { "@", TK_UNIQ },
-    { "~", TK_MUT },
+    { "@", TokenType::TK_UNIQ },
+    { "~", TokenType::TK_MUT },
     
-    { ";", TK_SCOLON }
+    { ";", TokenType::TK_SCOLON }
 };
 
 const std::vector<const symbol_t> Lexer::keywords = {
-    { "use", TK_USE },
-    { "declare", TK_DECLARE },
-    { "type", TK_TYPE },
-    { "lambda", TK_LAMBDA },
-    { "trait", TK_TRAIT },
-    { "object", TK_OBJECT },
-    { "actor", TK_ACTOR },
-    { "is", TK_IS },
-    { "var", TK_VAR },
-    { "delegate", TK_DELEGATE },
-    { "new", TK_NEW },
-    { "ambient", TK_AMBIENT },
-    { "function", TK_FUNCTION },
-    { "message", TK_MESSAGE },
-    { "throws", TK_THROWS },
-    { "throw", TK_THROW },
-    { "return", TK_RETURN },
-    { "break", TK_BREAK },
-    { "continue", TK_CONTINUE },
-    { "if", TK_IF },
-    { "else", TK_ELSE },
-    { "for", TK_FOR },
-    { "in", TK_IN },
-    { "while", TK_WHILE },
-    { "do", TK_DO },
-    { "match", TK_MATCH },
-    { "case", TK_CASE },
-    { "as", TK_AS },
-    { "catch", TK_CATCH },
-    { "always", TK_ALWAYS },
-    { "this", TK_THIS },
-    { "true", TK_TRUE },
-    { "false", TK_FALSE },
+    { "use", TokenType::TK_USE },
+    { "declare", TokenType::TK_DECLARE },
+    { "type", TokenType::TK_TYPE },
+    { "lambda", TokenType::TK_LAMBDA },
+    { "trait", TokenType::TK_TRAIT },
+    { "object", TokenType::TK_OBJECT },
+    { "actor", TokenType::TK_ACTOR },
+    { "is", TokenType::TK_IS },
+    { "var", TokenType::TK_VAR },
+    { "delegate", TokenType::TK_DELEGATE },
+    { "new", TokenType::TK_NEW },
+    { "ambient", TokenType::TK_AMBIENT },
+    { "function", TokenType::TK_FUNCTION },
+    { "message", TokenType::TK_MESSAGE },
+    { "throws", TokenType::TK_THROWS },
+    { "throw", TokenType::TK_THROW },
+    { "return", TokenType::TK_RETURN },
+    { "break", TokenType::TK_BREAK },
+    { "continue", TokenType::TK_CONTINUE },
+    { "if", TokenType::TK_IF },
+    { "else", TokenType::TK_ELSE },
+    { "for", TokenType::TK_FOR },
+    { "in", TokenType::TK_IN },
+    { "while", TokenType::TK_WHILE },
+    { "do", TokenType::TK_DO },
+    { "match", TokenType::TK_MATCH },
+    { "case", TokenType::TK_CASE },
+    { "as", TokenType::TK_AS },
+    { "catch", TokenType::TK_CATCH },
+    { "always", TokenType::TK_ALWAYS },
+    { "this", TokenType::TK_THIS },
+    { "true", TokenType::TK_TRUE },
+    { "false", TokenType::TK_FALSE },
 };
 
 void Lexer::push_error(std::string err) {
@@ -279,7 +279,7 @@ Token* Lexer::lexer_slash() {
     }
     
     Token* t = this->token_new();
-    t->id = TK_DIVIDE;
+    t->id = TokenType::TK_DIVIDE;
     
     return t;
 }
@@ -299,7 +299,7 @@ Token* Lexer::lexer_string() {
         {
             this->step();
             Token* t = this->token_new();
-            t->id = TK_STRING;
+            t->id = TokenType::TK_STRING;
             t->string = this->buff_copy();
             return t;
         }
@@ -486,7 +486,7 @@ Token* Lexer::real(size_t v) {
     if (error) {return nullptr;}
     
     Token* t = this->token_new();
-    t->id = TK_FLOAT;
+    t->id = TokenType::TK_FLOAT;
     t->flt = d * pow(10.0, e);
     return t;
 }
@@ -524,7 +524,7 @@ Token* Lexer::hexadecimal() {
     if( error ) { return nullptr; }
     
     Token* t = this->token_new();
-    t->id = TK_INT;
+    t->id = TokenType::TK_INT;
     t->integer = v;
     return t;
 }
@@ -562,7 +562,7 @@ Token* Lexer::decimal() {
     if( error ) { return nullptr; }
     
     Token* t = this->token_new();
-    t->id = TK_INT;
+    t->id = TokenType::TK_INT;
     t->integer = v;
     return t;
 }
@@ -598,7 +598,7 @@ Token* Lexer::binary() {
     if( error ) { return nullptr; }
     
     Token* t = this->token_new();
-    t->id = TK_INT;
+    t->id = TokenType::TK_INT;
     t->integer = v;
     return t;
 }
@@ -655,7 +655,7 @@ Token* Lexer::identifier() {
         }
     }
     
-    t->id = TK_ID;
+    t->id = TokenType::TK_ID;
     t->string = this->buff_copy();
     return t;
 }
@@ -664,7 +664,7 @@ Token* Lexer::type_id() {
     this->read_id();
     
     Token* t = this->token_new();
-    t->id = TK_TYPEID;
+    t->id = TokenType::TK_TYPEID;
     t->string = this->buff_copy();
     
     return t;
@@ -766,7 +766,7 @@ Token* Lexer::next() {
     if(t == nullptr) {
         
         t = this->token_new();
-        t->id = TK_EOF;
+        t->id = TokenType::TK_EOF;
     }
     
     return t;

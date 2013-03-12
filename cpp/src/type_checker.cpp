@@ -26,7 +26,7 @@
 #define debug(x)    (std::cout << x << std::endl)
 
 static std::string extractName(AST* ast) {
-    if (ast->t->id == TK_TYPEID) {
+    if (ast->t->id == TokenType::TK_TYPEID) {
         return ast->t->string;
     }
     
@@ -45,10 +45,10 @@ static std::string extractName(AST* ast) {
 }
 
 static void extractMixins(AST* ast, std::vector<std::string> &mixins) {
-    assert(ast->t->id == TK_OBJECT
-           || ast->t->id == TK_TRAIT
-           || ast->t->id == TK_ACTOR
-           || ast->t->id == TK_DECLARE);
+    assert(   ast->t->id == TokenType::TK_OBJECT
+           || ast->t->id == TokenType::TK_TRAIT
+           || ast->t->id == TokenType::TK_ACTOR
+           || ast->t->id == TokenType::TK_DECLARE);
     
     // Why 2, because why not
     if (ast->children.at(2) != nullptr) {
@@ -63,19 +63,13 @@ static void extractMixins(AST* ast, std::vector<std::string> &mixins) {
 }
 
 static Type* newType(AST* ast, Kind k, std::vector<ClassContents*> contents) {
-    Type* t = new Type;
-    
+
     auto mixins = std::vector<std::string>();
     extractMixins(ast, mixins);
     
     debug(mixins.size());
     
-    t->ast = ast;
-    t->name = extractName(ast);
-    t->kind = k;
-    t->mixins = mixins;
-    t->contents = contents;
-    return t;
+    return new Type(extractName(ast),k,ast,mixins,contents);
 }
 
 static ClassContents* newContents(AST* ast) {
@@ -91,23 +85,23 @@ static std::vector<ClassContents*> collectFunctions(AST* ast) {
     
     while (node != nullptr) {
         switch (node->t->id) {
-            case TK_VAR:
+            case TokenType::TK_VAR:
                 debug("var declaration");
                 contents.push_back(newContents(node));
                 break;
-            case TK_DELEGATE:
+            case TokenType::TK_DELEGATE:
                 debug("delegate");
                 break;
-            case TK_NEW:
+            case TokenType::TK_NEW:
                 debug("constructor");
                 break;
-            case TK_AMBIENT:
+            case TokenType::TK_AMBIENT:
                 debug("ambient");
                 break;
-            case TK_FUNCTION:
+            case TokenType::TK_FUNCTION:
                 debug("function");
                 break;
-            case TK_MESSAGE:
+            case TokenType::TK_MESSAGE:
                 debug("message");
                 break;
             default:
@@ -128,20 +122,20 @@ void TypeChecker::recurseSingleTopAST(AST* ast,
         return;
     
     switch (ast->t->id) {
-        case TK_OBJECT:
-            typeList.push_back(newType(ast,TYPE_OBJECT,collectFunctions(ast->children.at(3)->children.at(0))));
+        case TokenType::TK_OBJECT:
+            typeList.push_back(newType(ast, Kind::TYPE_OBJECT,collectFunctions(ast->children.at(3)->children.at(0))));
             return;
-        case TK_TRAIT:
-            typeList.push_back(newType(ast,TYPE_TRAIT,collectFunctions(ast->children.at(3)->children.at(0))));
+        case TokenType::TK_TRAIT:
+            typeList.push_back(newType(ast, Kind::TYPE_TRAIT,collectFunctions(ast->children.at(3)->children.at(0))));
             return;
-        case TK_ACTOR:
-            typeList.push_back(newType(ast, TYPE_ACTOR,collectFunctions(ast->children.at(3)->children.at(0))));
+        case TokenType::TK_ACTOR:
+            typeList.push_back(newType(ast, Kind::TYPE_ACTOR,collectFunctions(ast->children.at(3)->children.at(0))));
             return;
-        case TK_DECLARE:
+        case TokenType::TK_DECLARE:
             // Are declarations types? (yes - mappings from one type to another)
-            typeList.push_back(newType(ast, TYPE_DECLARE,collectFunctions(ast)));
+            typeList.push_back(newType(ast, Kind::TYPE_DECLARE,collectFunctions(ast)));
             return;
-        case TK_USE:
+        case TokenType::TK_USE:
         {            
             std::string importName = ast->children.at(1)->t->string;
             auto package = Loader::Load(this->unit->directoryName, importName);

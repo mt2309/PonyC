@@ -12,38 +12,39 @@
 #include <assert.h>
 #include <iostream>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#pragma GCC diagnostic ignored "-Wweak-vtables"
-#pragma GCC diagnostic ignored "-Wpadded"
-#pragma GCC diagnostic ignored "-Wdisabled-macro-expansion"
-#pragma GCC diagnostic ignored "-Wmissing-noreturn"
-#include <boost/format.hpp>
-#pragma GCC diagnostic pop
+//#pragma GCC diagnostic push
+//#pragma GCC diagnostic ignored "-Wsign-conversion"
+//#pragma GCC diagnostic ignored "-Wweak-vtables"
+//#pragma GCC diagnostic ignored "-Wpadded"
+//#pragma GCC diagnostic ignored "-Wdisabled-macro-expansion"
+//#pragma GCC diagnostic ignored "-Wmissing-noreturn"
+//#include <boost/format.hpp>
+//#pragma GCC diagnostic pop
 
-tok_type Parser::current() {
+TokenType Parser::current() {
     return this->t->id;
 }
 
-AST* Parser::ast_new(tok_type id) {
+AST* Parser::ast_new(TokenType id) {
     AST* a = new AST(nullptr, new Token(this->file_name, this->t->line, this->t->linePos, id));
     return a;
 }
 
 AST* Parser::ast_token() {
-    AST* a = (AST*)calloc(1, sizeof(AST));
-    a->t = this->t;
+    AST* a = new AST(nullptr,this->t);
     this->t = this->lexer->next();
-    a->children = std::vector<AST*>(AST_SLOTS);
     return a;
 }
 
-AST* Parser::ast_expect(tok_type id) {
+AST* Parser::ast_expect(TokenType id) {
     
     if (this->current() == id)
         return this->ast_token();
     
-    this->push_error((boost::format("Expected %1%, got %2%") % id % this->current()).str());
+    auto i = static_cast<std::underlying_type<TokenType>::type>(id);
+    auto cur = static_cast<std::underlying_type<TokenType>::type>(this->current());
+    
+    this->push_error("Expected " + std::to_string(i) +", got " + std::to_string(cur));
     return nullptr;
 }
 
@@ -52,7 +53,7 @@ void Parser::push_error(std::string err) {
     this->error_list.push_back(*error_new(this->t->fileName, this->t->line, this->t->linePos, err));
 }
 
-bool Parser::accept(tok_type id, AST* ast , int slot) {
+bool Parser::accept(TokenType id, AST* ast , int slot) {
         
     if (this->current() != id) { return false; }
     
@@ -68,14 +69,17 @@ bool Parser::accept(tok_type id, AST* ast , int slot) {
     return true;
 }
 
-bool Parser::expect(tok_type id , AST* ast ,int slot) {
+bool Parser::expect(TokenType id , AST* ast ,int slot) {
     if (this->accept(id, ast, slot)) {
         return true;
     }
-        
-    this->push_error((boost::format("Expected %1%, got %2%") % id % this->current()).str());
-    return false;
     
+    auto i = static_cast<std::underlying_type<TokenType>::type>(id);
+    auto cur = static_cast<std::underlying_type<TokenType>::type>(this->current());
+    
+    this->push_error("Expected " + std::to_string(i) +", got " + std::to_string(cur));
+    
+    return false;
 }
 
 void Parser::rule(rule_t f, AST* ast, int slot) {
@@ -87,7 +91,7 @@ void Parser::rule(rule_t f, AST* ast, int slot) {
     ast->children.at(slot) = child;
 }
 
-void Parser::rulelist(rule_t rule, tok_type id, AST* ast, int slot) {
+void Parser::rulelist(rule_t rule, TokenType id, AST* ast, int slot) {
     assert(ast != nullptr);
     assert(slot >= 0);
     assert(slot < AST_SLOTS);
@@ -147,10 +151,10 @@ void Parser::rulealtlist(const std::vector<alt_t> alt_vec, AST* ast, int slot) {
 }
 
 AST* Parser::mode_receiver() {
-    AST* ast = this->ast_expect(TK_MODE);
+    AST* ast = this->ast_expect(TokenType::TK_MODE);
     
     this->rule(&Parser::expr, ast, 0);
-    this->accept(TK_RBRACKET, ast, 1);
+    this->accept(TokenType::TK_RBRACKET, ast, 1);
     
     return ast;
 }
@@ -159,10 +163,10 @@ AST* Parser::mode() {
     // ('!' | '@' | '~' | '[:'expr ']')?
         
     static const std::vector<alt_t> alt = {
-        { TK_BANG,  &Parser::ast_token },
-        { TK_UNIQ,  &Parser::ast_token },
-        { TK_MUT,   &Parser::ast_token },
-        { TK_MODE,  &Parser::mode_receiver }
+        { TokenType::TK_BANG,  &Parser::ast_token },
+        { TokenType::TK_UNIQ,  &Parser::ast_token },
+        { TokenType::TK_MUT,   &Parser::ast_token },
+        { TokenType::TK_MODE,  &Parser::mode_receiver }
     };
 
     return rulealt(alt);
@@ -173,14 +177,14 @@ AST* Parser::atom() {
     // THIS | TRUE | FALSE | INT | STRING | ID | typeclass
     static std::vector<alt_t> alt =
     {
-        { TK_THIS, &Parser::ast_token },
-        { TK_TRUE, &Parser::ast_token },
-        { TK_FALSE, &Parser::ast_token },
-        { TK_INT, &Parser::ast_token },
-        { TK_FLOAT, &Parser::ast_token },
-        { TK_STRING, &Parser::ast_token },
-        { TK_ID, &Parser::ast_token },
-        { TK_TYPEID, &Parser::ast_token }
+        { TokenType::TK_THIS, &Parser::ast_token },
+        { TokenType::TK_TRUE, &Parser::ast_token },
+        { TokenType::TK_FALSE, &Parser::ast_token },
+        { TokenType::TK_INT, &Parser::ast_token },
+        { TokenType::TK_FLOAT, &Parser::ast_token },
+        { TokenType::TK_STRING, &Parser::ast_token },
+        { TokenType::TK_ID, &Parser::ast_token },
+        { TokenType::TK_TYPEID, &Parser::ast_token }
     };
     
     AST* ast = this->rulealt(alt);
@@ -196,14 +200,14 @@ AST* Parser::command() {
     
     AST* ast;
     
-    if (this->accept(TK_LPAREN, nullptr, -1)) {
+    if (this->accept(TokenType::TK_LPAREN, nullptr, -1)) {
         ast = this->expr();
-        this->expect(TK_RPAREN, nullptr, -1);
-    } else if (this->current() == TK_LBRACKET) {
+        this->expect(TokenType::TK_RPAREN, nullptr, -1);
+    } else if (this->current() == TokenType::TK_LBRACKET) {
         ast = this->ast_token();
-        ast->t->id = TK_LIST;
-        this->rulelist(&Parser::arg, TK_COMMA, ast, 0);
-        this->expect(TK_RBRACKET, ast, -1);
+        ast->t->id = TokenType::TK_LIST;
+        this->rulelist(&Parser::arg, TokenType::TK_COMMA, ast, 0);
+        this->expect(TokenType::TK_RBRACKET, ast, -1);
     } else {
         ast = this->atom();
     }
@@ -211,18 +215,18 @@ AST* Parser::command() {
     if (ast != nullptr) {
         while (true) {
             switch (this->current()) {
-                case TK_CALL: {
+                case TokenType::TK_CALL: {
                     AST* a = this->ast_token();
                     a->children.at(0) = ast;
                     ast = a;
                     
-                    this->accept(TK_ID, ast, 1);
+                    this->accept(TokenType::TK_ID, ast, 1);
                     this->rule(&Parser::formalargs, ast, 2);
                     this->rule(&Parser::args, ast, 3);
                 }
                     break;
                     
-                case TK_LPAREN: {
+                case TokenType::TK_LPAREN: {
                     AST* a = this->ast_token();
                     a->children.at(0) = ast;
                     ast = a;
@@ -250,10 +254,10 @@ AST* Parser::unary() {
     
     static std::vector<alt_t> alt =
     {
-        { TK_PARTIAL, &Parser::unop },
-        { TK_MINUS, &Parser::unop },
-        { TK_BANG, &Parser::unop },
-        { TK_LAMBDA, &Parser::lambda }
+        { TokenType::TK_PARTIAL, &Parser::unop },
+        { TokenType::TK_MINUS, &Parser::unop },
+        { TokenType::TK_BANG, &Parser::unop },
+        { TokenType::TK_LAMBDA, &Parser::lambda }
     };
     
     AST* ast = this->rulealt(alt);
@@ -274,24 +278,24 @@ AST* Parser::expr() {
     if (ast != nullptr) {
         while (true) {
             switch (this->current()) {
-                case TK_PLUS:
-                case TK_MINUS:
-                case TK_MULTIPLY:
-                case TK_DIVIDE:
-                case TK_MOD:
-                case TK_LSHIFT:
-                case TK_RSHIFT:
-                case TK_LT:
-                case TK_LE:
-                case TK_GE:
-                case TK_GT:
-                case TK_EQ:
-                case TK_NOTEQ:
-                case TK_STEQ:
-                case TK_NSTEQ:
-                case TK_OR:
-                case TK_AND:
-                case TK_XOR:
+                case TokenType::TK_PLUS:
+                case TokenType::TK_MINUS:
+                case TokenType::TK_MULTIPLY:
+                case TokenType::TK_DIVIDE:
+                case TokenType::TK_MOD:
+                case TokenType::TK_LSHIFT:
+                case TokenType::TK_RSHIFT:
+                case TokenType::TK_LT:
+                case TokenType::TK_LE:
+                case TokenType::TK_GE:
+                case TokenType::TK_GT:
+                case TokenType::TK_EQ:
+                case TokenType::TK_NOTEQ:
+                case TokenType::TK_STEQ:
+                case TokenType::TK_NSTEQ:
+                case TokenType::TK_OR:
+                case TokenType::TK_AND:
+                case TokenType::TK_XOR:
                     {
                         AST* binop = this->ast_token();
                         binop->children.at(0) = ast;
@@ -312,12 +316,12 @@ AST* Parser::expr() {
 
 AST* Parser::arg() {
     
-    AST* ast = this->ast_new(TK_ARG);
+    AST* ast = this->ast_new(TokenType::TK_ARG);
     
     this->rule(&Parser::expr, ast, 0);
     this->rule(&Parser::oftype, ast, 1);
     
-    if (this->accept(TK_ASSIGN, ast, -1)) {
+    if (this->accept(TokenType::TK_ASSIGN, ast, -1)) {
         this->rule(&Parser::expr, ast, 2);
     }
     
@@ -325,26 +329,26 @@ AST* Parser::arg() {
 }
 
 AST* Parser::args() {
-    AST* ast = this->ast_new(TK_ARGS);
+    AST* ast = this->ast_new(TokenType::TK_ARGS);
     
-    this->expect(TK_LPAREN, ast, -1);
+    this->expect(TokenType::TK_LPAREN, ast, -1);
     
-    if (!this->accept(TK_RPAREN, ast, -1)) {
-        this->rulelist(&Parser::arg, TK_COMMA, ast, 0);
-        this->expect(TK_RPAREN, ast, -1);
+    if (!this->accept(TokenType::TK_RPAREN, ast, -1)) {
+        this->rulelist(&Parser::arg, TokenType::TK_COMMA, ast, 0);
+        this->expect(TokenType::TK_RPAREN, ast, -1);
     }
     
     return ast;
 }
 
 AST* Parser::conditional() {
-    AST* ast = this->ast_expect(TK_IF);
+    AST* ast = this->ast_expect(TokenType::TK_IF);
     
     this->rule(&Parser::expr, ast, 0);
     this->rule(&Parser::block, ast, 1);
     
-    if (this->accept(TK_ELSE, ast, -1)) {
-        if (this->current() == TK_IF)
+    if (this->accept(TokenType::TK_ELSE, ast, -1)) {
+        if (this->current() == TokenType::TK_IF)
             this->rule(&Parser::conditional, ast, 2);
         else
             this->rule(&Parser::block, ast, 2);
@@ -355,19 +359,19 @@ AST* Parser::conditional() {
 
 AST* Parser::forvar() {
     
-    AST* ast = this->ast_new(TK_VAR);
+    AST* ast = this->ast_new(TokenType::TK_VAR);
     
-    this->expect(TK_ID, ast, 0);
+    this->expect(TokenType::TK_ID, ast, 0);
     this->rule(&Parser::oftype, ast, 1);
     
     return ast;
 }
 
 AST* Parser::forloop() {
-    AST* ast = this->ast_expect(TK_FOR);
+    AST* ast = this->ast_expect(TokenType::TK_FOR);
     
-    this->rulelist(&Parser::forvar, TK_COMMA, ast, 0 );
-    this->expect(TK_IN, ast, -1 );
+    this->rulelist(&Parser::forvar, TokenType::TK_COMMA, ast, 0 );
+    this->expect(TokenType::TK_IN, ast, -1 );
     this->rule(&Parser::expr, ast, 1 );
     this->rule(&Parser::block, ast, 2 );
     
@@ -375,7 +379,7 @@ AST* Parser::forloop() {
 }
 
 AST* Parser::whileloop() {
-    AST* ast = this->ast_expect(TK_WHILE);
+    AST* ast = this->ast_expect(TokenType::TK_WHILE);
     
     this->rule(&Parser::expr, ast, 0);
     this->rule(&Parser::block, ast, 1);
@@ -385,24 +389,24 @@ AST* Parser::whileloop() {
 
 AST* Parser::doloop() {
     
-    AST* ast = this->ast_expect(TK_DO);
+    AST* ast = this->ast_expect(TokenType::TK_DO);
     
     this->rule(&Parser::block, ast, 1 );
-    this->expect(TK_WHILE, ast, -1 );
+    this->expect(TokenType::TK_WHILE, ast, -1 );
     this->rule(&Parser::expr, ast, 0 );
     
     return ast;
 }
 
 AST* Parser::casevar() {
-    AST* ast = this->ast_new(TK_CASEVAR);
+    AST* ast = this->ast_new(TokenType::TK_CASEVAR);
     
-    if (this->accept(TK_AS, ast, -1)) {
+    if (this->accept(TokenType::TK_AS, ast, -1)) {
         this->rule(&Parser::forvar, ast, 0);
     } else {
         this->rule(&Parser::expr, ast, 1);
         
-        if (this->accept(TK_AS, ast, -1))
+        if (this->accept(TokenType::TK_AS, ast, -1))
             this->rule(&Parser::forvar, ast, 0);
     }
     
@@ -410,16 +414,16 @@ AST* Parser::casevar() {
 }
 
 AST* Parser::caseblock() {
-    AST* ast = this->ast_expect(TK_CASE);
+    AST* ast = this->ast_expect(TokenType::TK_CASE);
     
-    if (    (this->current() != TK_IF)
-        &&  (this->current() != TK_LBRACE))
+    if (    (this->current() != TokenType::TK_IF)
+        &&  (this->current() != TokenType::TK_LBRACE))
     {
         
-        this->rulelist(&Parser::casevar, TK_COMMA, ast, 0);
+        this->rulelist(&Parser::casevar, TokenType::TK_COMMA, ast, 0);
     }
     
-    if (this->accept(TK_IF, ast, -1)) {
+    if (this->accept(TokenType::TK_IF, ast, -1)) {
         this->rule(&Parser::expr, ast, 1);
     }
     
@@ -431,21 +435,21 @@ AST* Parser::caseblock() {
 AST* Parser::match() {
     
     static std::vector<alt_t> alt = {
-        { TK_CASE, &Parser::caseblock }
+        { TokenType::TK_CASE, &Parser::caseblock }
     };
     
-    AST* ast = this->ast_expect(TK_MATCH);
+    AST* ast = this->ast_expect(TokenType::TK_MATCH);
     
-    this->rulelist(&Parser::expr, TK_COMMA, ast, 0 );
-    this->expect(TK_LBRACE, ast, -1 );
+    this->rulelist(&Parser::expr, TokenType::TK_COMMA, ast, 0 );
+    this->expect(TokenType::TK_LBRACE, ast, -1 );
     this->rulealtlist(alt, ast, 1 );
-    this->expect(TK_RBRACE, ast, -1 );
+    this->expect(TokenType::TK_RBRACE, ast, -1 );
     
     return ast;
 }
 
 AST* Parser::catchblock() {
-    AST* ast = this->ast_expect( TK_CATCH );
+    AST* ast = this->ast_expect( TokenType::TK_CATCH );
     
     this->rule( &Parser::block, ast, 0 );
     
@@ -453,7 +457,7 @@ AST* Parser::catchblock() {
 }
 
 AST* Parser::always() {
-    AST* ast = this->ast_expect(TK_ALWAYS);
+    AST* ast = this->ast_expect(TokenType::TK_ALWAYS);
     
     this->rule( &Parser::block, ast, 0 );
     
@@ -463,11 +467,11 @@ AST* Parser::always() {
 AST* Parser::lvalue() {
     AST* ast;
     
-    if( this->current() == TK_VAR)
+    if( this->current() == TokenType::TK_VAR)
     {
         ast = this->ast_token();
         
-        this->expect(TK_ID, ast, 0 );
+        this->expect(TokenType::TK_ID, ast, 0 );
         
         this->rule(&Parser::oftype, ast, 1 );
     } else {
@@ -479,12 +483,12 @@ AST* Parser::lvalue() {
 
 AST* Parser::assignment() {
         
-    AST* ast = this->ast_new(TK_ASSIGN);
+    AST* ast = this->ast_new(TokenType::TK_ASSIGN);
     
-    this->rulelist( &Parser::lvalue, TK_COMMA, ast, 0 );
+    this->rulelist( &Parser::lvalue, TokenType::TK_COMMA, ast, 0 );
     
-    if( this->accept(TK_ASSIGN, ast, -1 ))
-        this->rulelist(&Parser::expr, TK_COMMA, ast, 1 );
+    if( this->accept(TokenType::TK_ASSIGN, ast, -1 ))
+        this->rulelist(&Parser::expr, TokenType::TK_COMMA, ast, 1 );
     
     return ast;
 }
@@ -493,67 +497,67 @@ AST* Parser::block() {
     
     static std::vector<alt_t> alt =
     {
-        { TK_LBRACE,    &Parser::block },
-        { TK_IF,        &Parser::conditional },
-        { TK_FOR,       &Parser::forloop },
-        { TK_WHILE,     &Parser::whileloop },
-        { TK_DO,        &Parser::doloop },
-        { TK_MATCH,     &Parser::match },
-        { TK_RETURN,    &Parser::ast_token },
-        { TK_BREAK,     &Parser::ast_token },
-        { TK_CONTINUE,  &Parser::ast_token },
-        { TK_THROW,     &Parser::ast_token },
+        { TokenType::TK_LBRACE,    &Parser::block },
+        { TokenType::TK_IF,        &Parser::conditional },
+        { TokenType::TK_FOR,       &Parser::forloop },
+        { TokenType::TK_WHILE,     &Parser::whileloop },
+        { TokenType::TK_DO,        &Parser::doloop },
+        { TokenType::TK_MATCH,     &Parser::match },
+        { TokenType::TK_RETURN,    &Parser::ast_token },
+        { TokenType::TK_BREAK,     &Parser::ast_token },
+        { TokenType::TK_CONTINUE,  &Parser::ast_token },
+        { TokenType::TK_THROW,     &Parser::ast_token },
         
-        { TK_VAR,       &Parser::assignment },
-        { TK_THIS,      &Parser::assignment },
-        { TK_TRUE,      &Parser::assignment },
-        { TK_FALSE,     &Parser::assignment },
-        { TK_INT,       &Parser::assignment },
-        { TK_FLOAT,     &Parser::assignment },
-        { TK_STRING,    &Parser::assignment },
-        { TK_ID,        &Parser::assignment },
-        { TK_TYPEID,    &Parser::assignment }
+        { TokenType::TK_VAR,       &Parser::assignment },
+        { TokenType::TK_THIS,      &Parser::assignment },
+        { TokenType::TK_TRUE,      &Parser::assignment },
+        { TokenType::TK_FALSE,     &Parser::assignment },
+        { TokenType::TK_INT,       &Parser::assignment },
+        { TokenType::TK_FLOAT,     &Parser::assignment },
+        { TokenType::TK_STRING,    &Parser::assignment },
+        { TokenType::TK_ID,        &Parser::assignment },
+        { TokenType::TK_TYPEID,    &Parser::assignment }
         
     };
 
-    AST* ast = this->ast_new( TK_BLOCK );
-    this->expect(TK_LBRACE, ast, -1 );
+    AST* ast = this->ast_new( TokenType::TK_BLOCK );
+    this->expect(TokenType::TK_LBRACE, ast, -1 );
     this->rulealtlist(alt, ast, 0 );
     
-    if(this->current() == TK_CATCH)
+    if(this->current() == TokenType::TK_CATCH)
         this->rule(&Parser::catchblock, ast, 1 );
     
-    if (this->current() == TK_ALWAYS)
+    if (this->current() == TokenType::TK_ALWAYS)
         this->rule(&Parser::always, ast, 2);
     
-    this->expect(TK_RBRACE, ast, -1 );
+    this->expect(TokenType::TK_RBRACE, ast, -1 );
     return ast;
 }
 
 AST* Parser::formalargs() {
-    AST* ast = this->ast_new( TK_FORMALARGS );
+    AST* ast = this->ast_new( TokenType::TK_FORMALARGS );
         
-    if( this->accept(TK_LBRACKET, ast, -1 ) )
+    if( this->accept(TokenType::TK_LBRACKET, ast, -1 ) )
     {
-        this->rulelist( &Parser::arg, TK_COMMA, ast, 0 );
-        this->expect(TK_RBRACKET, ast, -1 );
+        this->rulelist( &Parser::arg, TokenType::TK_COMMA, ast, 0 );
+        this->expect(TokenType::TK_RBRACKET, ast, -1 );
     }
     
     return ast;
 }
 
 AST* Parser::typelambda() {
-    AST* ast = this->ast_expect( TK_LAMBDA );
+    AST* ast = this->ast_expect( TokenType::TK_LAMBDA );
     
     this->rule(&Parser::mode, ast, 0 );
     this->rule(&Parser::args, ast, 1 );
     
-    if( this->accept(TK_RESULTS, ast, -1 ) )
+    if( this->accept(TokenType::TK_RESULTS, ast, -1 ) )
     {
         this->rule( &Parser::args, ast, 2 );
     }
     
-    this->accept(TK_THROWS, ast, 3 );
+    this->accept(TokenType::TK_THROWS, ast, 3 );
     
     return ast;
 }
@@ -561,19 +565,19 @@ AST* Parser::typelambda() {
 AST* Parser::lambda() {
     AST* ast = this->typelambda();
     
-    if( this->accept(TK_IS, ast, -1 ) )
+    if( this->accept(TokenType::TK_IS, ast, -1 ) )
         this->rule(&Parser::block, ast, 4 );
     
     return ast;
 }
 
 AST* Parser::typeclass() {
-    AST* ast = this->ast_new( TK_TYPECLASS );
+    AST* ast = this->ast_new( TokenType::TK_TYPECLASS );
     
-    this->expect(TK_TYPEID, ast, 0 );
+    this->expect(TokenType::TK_TYPEID, ast, 0 );
     
-    if(this->accept(TK_PACKAGE, ast, -1 )) {
-        this->expect(TK_TYPEID, ast, 1 );
+    if(this->accept(TokenType::TK_PACKAGE, ast, -1 )) {
+        this->expect(TokenType::TK_TYPEID, ast, 1 );
     }
     
     this->rule(&Parser::mode, ast, 2 );
@@ -583,7 +587,7 @@ AST* Parser::typeclass() {
 
 AST* Parser::partialtype() {
 
-    AST* ast = this->ast_expect(TK_PARTIAL);
+    AST* ast = this->ast_expect(TokenType::TK_PARTIAL);
     this->rule(&Parser::typeclass, ast, 0 );
     return ast;
 }
@@ -591,9 +595,9 @@ AST* Parser::partialtype() {
 AST* Parser::typeelement() {
     static std::vector<alt_t> alt =
     {
-        { TK_PARTIAL, &Parser::partialtype },
-        { TK_TYPEID, &Parser::typeclass },
-        { TK_LAMBDA, &Parser::typelambda }
+        { TokenType::TK_PARTIAL, &Parser::partialtype },
+        { TokenType::TK_TYPEID, &Parser::typeclass },
+        { TokenType::TK_LAMBDA, &Parser::typelambda }
     };
     
     AST* ast = this->rulealt(alt);
@@ -605,45 +609,45 @@ AST* Parser::typeelement() {
 }
 
 AST* Parser::oftype() {
-    AST* ast = this->ast_new(TK_OFTYPE);
+    AST* ast = this->ast_new(TokenType::TK_OFTYPE);
     
-    if(this->accept(TK_OFTYPE, ast, -1 ))
-        rulelist(&Parser::typeelement, TK_OR, ast, 0 );
+    if(this->accept(TokenType::TK_OFTYPE, ast, -1 ))
+        rulelist(&Parser::typeelement, TokenType::TK_OR, ast, 0 );
     
     return ast;
 }
 
 AST* Parser::field() {
-    AST* ast = this->ast_new( TK_FIELD );
+    AST* ast = this->ast_new( TokenType::TK_FIELD );
     
-    this->expect(TK_VAR, ast, -1 );
-    this->expect(TK_ID, ast, 0 );
+    this->expect(TokenType::TK_VAR, ast, -1 );
+    this->expect(TokenType::TK_ID, ast, 0 );
     this->rule( &Parser::oftype, ast, 1 );
     
-    if(this->accept(TK_ASSIGN, ast, -1 ))
+    if(this->accept(TokenType::TK_ASSIGN, ast, -1 ))
         this->rule( &Parser::expr, ast, 2 );
     
     return ast;
 }
 
 AST* Parser::delegate() {
-    AST* ast = this->ast_expect( TK_DELEGATE );
+    AST* ast = this->ast_expect( TokenType::TK_DELEGATE );
     
-    this->expect(TK_ID, ast, 0 );
+    this->expect(TokenType::TK_ID, ast, 0 );
     this->rule(&Parser::oftype, ast, 1 );
     return ast;
 }
 
 AST* Parser::constructor() {
-    AST* ast = this->ast_expect(TK_NEW);
+    AST* ast = this->ast_expect(TokenType::TK_NEW);
     
     this->rule(&Parser::mode, ast, 0);
-    this->accept(TK_ID, ast, 1 );
+    this->accept(TokenType::TK_ID, ast, 1 );
     this->rule(&Parser::formalargs, ast, 2 );
     this->rule(&Parser::args, ast, 3 );
-    this->accept(TK_THROWS, ast, 4 );
+    this->accept(TokenType::TK_THROWS, ast, 4 );
     
-    if(this->current() == TK_LBRACE)
+    if(this->current() == TokenType::TK_LBRACE)
         this->rule(&Parser::block, ast, 5 );
     
     return ast;
@@ -651,47 +655,47 @@ AST* Parser::constructor() {
 
 AST* Parser::ambient() {
     
-    AST* ast = this->ast_expect(TK_AMBIENT);
+    AST* ast = this->ast_expect(TokenType::TK_AMBIENT);
     
-    this->accept(TK_ID, ast, 0 );
+    this->accept(TokenType::TK_ID, ast, 0 );
     this->rule(&Parser::formalargs, ast, 1 );
     this->rule(&Parser::args, ast, 2 );
-    this->accept(TK_THROWS, ast, 3 );
+    this->accept(TokenType::TK_THROWS, ast, 3 );
     
-    if(this->current() == TK_LBRACE)
+    if(this->current() == TokenType::TK_LBRACE)
         this->rule(&Parser::block, ast, 4 );
     
     return ast;
 }
 
 AST* Parser::function() {
-    AST* ast = this->ast_expect(TK_FUNCTION);
+    AST* ast = this->ast_expect(TokenType::TK_FUNCTION);
     
     this->rule(&Parser::mode, ast, 0 );
-    this->accept(TK_ID, ast, 1 );
+    this->accept(TokenType::TK_ID, ast, 1 );
     this->rule(&Parser::formalargs, ast, 2 );
     this->rule(&Parser::args, ast, 3 );
     
-    if( this->accept(TK_RESULTS, ast, -1 ) )
+    if( this->accept(TokenType::TK_RESULTS, ast, -1 ) )
         this->rule(&Parser::args, ast, 4 );
     
-    this->accept(TK_THROWS, ast, 5 );
+    this->accept(TokenType::TK_THROWS, ast, 5 );
     
-    if( this->current() == TK_LBRACE )
+    if( this->current() == TokenType::TK_LBRACE )
         this->rule(&Parser::block, ast, 6 );
     
     return ast;
 }
 
 AST* Parser::message() {
-    AST* ast = this->ast_expect(TK_MESSAGE);
+    AST* ast = this->ast_expect(TokenType::TK_MESSAGE);
     
     this->rule(&Parser::mode, ast, 0);
-    this->accept(TK_ID, ast, 1);
+    this->accept(TokenType::TK_ID, ast, 1);
     this->rule(&Parser::formalargs, ast, 2);
     this->rule(&Parser::args, ast, 3);
     
-    if( this->current() == TK_LBRACE )
+    if( this->current() == TokenType::TK_LBRACE )
         this->rule(&Parser::block, ast, 4);
     
     return ast;
@@ -699,36 +703,36 @@ AST* Parser::message() {
 
 AST* Parser::typebody() {
     static std::vector<alt_t> alt = {
-        { TK_VAR,       &Parser::field },
-        { TK_DELEGATE,  &Parser::delegate },
-        { TK_NEW,       &Parser::constructor },
-        { TK_AMBIENT,   &Parser::ambient },
-        { TK_FUNCTION,  &Parser::function },
-        { TK_MESSAGE,   &Parser::message }
+        { TokenType::TK_VAR,       &Parser::field },
+        { TokenType::TK_DELEGATE,  &Parser::delegate },
+        { TokenType::TK_NEW,       &Parser::constructor },
+        { TokenType::TK_AMBIENT,   &Parser::ambient },
+        { TokenType::TK_FUNCTION,  &Parser::function },
+        { TokenType::TK_MESSAGE,   &Parser::message }
     };
     
-    AST* ast = this->ast_new( TK_TYPEBODY );
+    AST* ast = this->ast_new( TokenType::TK_TYPEBODY );
     
-    this->expect(TK_LBRACE, ast, -1 );
+    this->expect(TokenType::TK_LBRACE, ast, -1 );
     this->rulealtlist(alt, ast, 0 );
-    this->expect(TK_RBRACE, ast, -1 );
+    this->expect(TokenType::TK_RBRACE, ast, -1 );
     
     return ast;
 }
 
 AST* Parser::is() {
-    AST* ast = this->ast_new( TK_IS );
+    AST* ast = this->ast_new( TokenType::TK_IS );
     
-    if(this->accept(TK_IS, ast, -1 ))
-        this->rulelist(&Parser::typeclass, TK_COMMA, ast, 0 );
+    if(this->accept(TokenType::TK_IS, ast, -1 ))
+        this->rulelist(&Parser::typeclass, TokenType::TK_COMMA, ast, 0 );
     
     return ast;
 }
 
 AST* Parser::trait() {
-    AST* ast = this->ast_expect(TK_TRAIT);
+    AST* ast = this->ast_expect(TokenType::TK_TRAIT);
     
-    this->expect(TK_TYPEID, ast, 0 );
+    this->expect(TokenType::TK_TYPEID, ast, 0 );
     this->rule(&Parser::formalargs, ast, 1 );
     this->rule(&Parser::is, ast, 2 );
     this->rule(&Parser::typebody, ast, 3 );
@@ -737,9 +741,9 @@ AST* Parser::trait() {
 }
 
 AST* Parser::object() {
-    AST* ast = this->ast_expect(TK_OBJECT);
+    AST* ast = this->ast_expect(TokenType::TK_OBJECT);
     
-    this->expect(TK_TYPEID, ast, 0 );
+    this->expect(TokenType::TK_TYPEID, ast, 0 );
     this->rule(&Parser::formalargs, ast, 1 );
     this->rule(&Parser::is, ast, 2 );
     this->rule(&Parser::typebody, ast, 3 );
@@ -748,9 +752,9 @@ AST* Parser::object() {
 }
 
 AST* Parser::actor() {
-    AST* ast = this->ast_expect(TK_ACTOR);
+    AST* ast = this->ast_expect(TokenType::TK_ACTOR);
     
-    this->expect(TK_TYPEID, ast, 0 );
+    this->expect(TokenType::TK_TYPEID, ast, 0 );
     this->rule(&Parser::formalargs, ast, 1 );
     this->rule(&Parser::is, ast, 2 );
     this->rule(&Parser::typebody, ast, 3 );
@@ -759,9 +763,9 @@ AST* Parser::actor() {
 }
 
 AST* Parser::type() {
-    AST* ast = this->ast_expect(TK_TYPE);
+    AST* ast = this->ast_expect(TokenType::TK_TYPE);
     
-    this->expect(TK_TYPEID, ast, 0 );
+    this->expect(TokenType::TK_TYPEID, ast, 0 );
     this->rule(&Parser::oftype, ast, 1 );
     this->rule(&Parser::is, ast, 2 );
     
@@ -769,28 +773,28 @@ AST* Parser::type() {
 }
 
 AST* Parser::map() {
-    AST* ast = this->ast_new(TK_MAP);
+    AST* ast = this->ast_new(TokenType::TK_MAP);
     
-    this->expect(TK_ID, ast, 0 );
-    this->expect(TK_ASSIGN, ast, -1 );
-    this->expect(TK_ID, ast, 1 );
+    this->expect(TokenType::TK_ID, ast, 0 );
+    this->expect(TokenType::TK_ASSIGN, ast, -1 );
+    this->expect(TokenType::TK_ID, ast, 1 );
     
     return ast;
 }
 
 AST* Parser::declaremap() {
-    AST* ast = this->ast_new(TK_DECLAREMAP);
+    AST* ast = this->ast_new(TokenType::TK_DECLAREMAP);
     
-    if(this->accept(TK_LBRACE, ast, -1 )) {
-        this->rulelist(&Parser::map, TK_COMMA, ast, 0 );
-        this->expect(TK_RBRACE, ast, -1 );
+    if(this->accept(TokenType::TK_LBRACE, ast, -1 )) {
+        this->rulelist(&Parser::map, TokenType::TK_COMMA, ast, 0 );
+        this->expect(TokenType::TK_RBRACE, ast, -1 );
     }
     
     return ast;
 }
 
 AST* Parser::declare() {
-    AST* ast = this->ast_expect(TK_DECLARE);
+    AST* ast = this->ast_expect(TokenType::TK_DECLARE);
     
     this->rule(&Parser::typeclass, ast, 0 );
     this->rule(&Parser::is, ast, 1 );
@@ -800,12 +804,12 @@ AST* Parser::declare() {
 }
 
 AST* Parser::use() {
-    AST* ast = this->ast_expect(TK_USE);
+    AST* ast = this->ast_expect(TokenType::TK_USE);
     
-    if( this->accept(TK_TYPEID, ast, 0 ) )
-        this->expect(TK_ASSIGN, ast, -1 );
+    if( this->accept(TokenType::TK_TYPEID, ast, 0 ) )
+        this->expect(TokenType::TK_ASSIGN, ast, -1 );
     
-    this->expect(TK_STRING, ast, 1 );
+    this->expect(TokenType::TK_STRING, ast, 1 );
     return ast;
 }
 
@@ -813,19 +817,19 @@ AST* Parser::module() {
     
     static std::vector<alt_t> alt =
     {
-        { TK_USE,           &Parser::use },
-        { TK_DECLARE,       &Parser::declare },
-        { TK_TYPE,          &Parser::type },
-        { TK_TRAIT,         &Parser::trait },
-        { TK_OBJECT,        &Parser::object },
-        { TK_ACTOR,         &Parser::actor },
+        { TokenType::TK_USE,           &Parser::use },
+        { TokenType::TK_DECLARE,       &Parser::declare },
+        { TokenType::TK_TYPE,          &Parser::type },
+        { TokenType::TK_TRAIT,         &Parser::trait },
+        { TokenType::TK_OBJECT,        &Parser::object },
+        { TokenType::TK_ACTOR,         &Parser::actor },
     };
     
-    AST* ast = this->ast_new(TK_MODULE);
+    AST* ast = this->ast_new(TokenType::TK_MODULE);
     
     this->rulealtlist(alt, ast, 0 );
     
-    this->expect(TK_EOF, ast, -1);
+    this->expect(TokenType::TK_EOF, ast, -1);
     
     return ast;
 }
@@ -839,10 +843,7 @@ AST* Parser::parse() {
     if (this->error_list.size() != 0) {
         std::cout << "Parse errors detected:" << std::endl;
         for(error_t err : this->error_list) {
-            std::cout << boost::format("Error at %1%:%2%: %3%")
-                % err.line
-                % err.line_pos
-                % err.message << std::endl;
+            std::cout << "Error at " << err.line << ":" << err.line_pos << ":" << err.message << std::endl;
         }
     }
     return this->m_ast;

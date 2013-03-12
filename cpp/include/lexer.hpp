@@ -17,7 +17,7 @@
 
 typedef struct symbol_t {
     const std::string symbol;
-    const tok_type id;
+    const TokenType id;
 } symbol_t;
 
 

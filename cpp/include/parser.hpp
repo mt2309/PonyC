@@ -21,7 +21,7 @@ typedef class Parser Parser;
 typedef AST* (Parser::*rule_t)();
 
 typedef struct alt_t{
-    tok_type id;
+    TokenType id;
     rule_t f;
 } alt_t;
 
@@ -49,19 +49,19 @@ public:
     AST* parse();
     void push_error(std::string err);
 
-    tok_type current();
-    bool accept(tok_type, AST*,int);
-    bool expect(tok_type, AST*,int);
+    TokenType current();
+    bool accept(TokenType, AST*,int);
+    bool expect(TokenType, AST*,int);
     void rule(rule_t,AST*,int);
-    void rulelist(rule_t,tok_type,AST*,int);
+    void rulelist(rule_t,TokenType,AST*,int);
     AST* tokenrule();
     AST* mode();
 
 private:
 
-    AST* ast_new(tok_type id);
+    AST* ast_new(TokenType);
     AST* ast_token();
-    AST* ast_expect(tok_type id);
+    AST* ast_expect(TokenType);
     AST* rulealt(const std::vector<alt_t> alt_vec);
     void rulealtlist(const std::vector<alt_t> alt_vec, AST* ast, int slot);
 

@@ -7,13 +7,14 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <ostream>
+#include <type_traits>
 
 #define FILE_EXTENSION ".pony"
 
 namespace fs = boost::filesystem;
 
-enum class TokenType {
+enum class TokenType : unsigned int {
     // primitives
     TK_STRING   = 0,
     TK_INT      = 1,
@@ -152,10 +153,10 @@ public:
         size_t integer;
     };
     
-    tok_type id;
+    TokenType id;
     
     Token(std::string file, size_t l, size_t lp) : fileName(file), line(l), linePos(lp) {}
-    Token(std::string file, size_t l, size_t lp, tok_type t) : fileName(file), line(l), linePos(lp), id(t) {}
+    Token(std::string file, size_t l, size_t lp, TokenType t) : fileName(file), line(l), linePos(lp), id(t) {}
     ~Token() {}
 };
 
@@ -223,8 +224,5 @@ public:
 };
 
 typedef std::string program_name;
-
-void recurse_dir(fs::path p, std::vector<std::tuple<program_name,std::string>>* vec);
-std::vector<std::tuple<program_name,std::string>>* get_files_directory(std::string dir);
 
 #endif
