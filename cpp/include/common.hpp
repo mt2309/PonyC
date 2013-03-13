@@ -3,16 +3,13 @@
 
 #define AST_SLOTS 7
 
-#include <boost/filesystem.hpp>
-
 #include <string>
 #include <vector>
+#include <set>
 #include <ostream>
 #include <type_traits>
 
 #define FILE_EXTENSION ".pony"
-
-namespace fs = boost::filesystem;
 
 enum class TokenType : unsigned int {
     // primitives
@@ -120,24 +117,16 @@ enum class TokenType : unsigned int {
     TK_EOF      = 86
 
 };
+    
+#define tokTypeInt(id) (static_cast<std::underlying_type<TokenType>::type>(id))
 
 enum class Kind {
     TYPE_TRAIT,
     TYPE_ACTOR,
     TYPE_OBJECT,
     TYPE_PRIMITIVE,
-    TYPE_FUNCTION,
     TYPE_IMPORT,
     TYPE_DECLARE
-};
-
-enum class Content {
-    CN_VAR,
-    CN_DELEGATE,
-    CN_NEW,
-    CN_AMBIENT,
-    CN_FUNCTION,
-    CN_MESSAGE
 };
 
 class Token {
@@ -163,26 +152,6 @@ public:
 typedef class Type Type;
 typedef class ClassContents ClassContents;
 
-typedef struct Delegate {
-
-} Delegate;
-
-typedef struct C_New {
-
-} C_New;
-
-typedef struct Ambient {
-
-} Ambient;
-
-typedef struct Function {
-
-} Function;
-
-typedef struct Message {
-
-} Message;
-
 class AST {
     
 public:
@@ -203,9 +172,9 @@ public:
 
     AST* ast;
     std::vector<std::string> mixins;
-    std::vector<ClassContents*> contents;
+    std::set<ClassContents*> contents;
     
-    Type(std::string n, Kind k, AST* a, std::vector<std::string> m, std::vector<ClassContents*> c) : name(n), kind(k), ast(a), mixins(m), contents(c) {}
+    Type(std::string n, Kind k, AST* a, std::vector<std::string> m, std::set<ClassContents*> c) : name(n), kind(k), ast(a), mixins(m), contents(c) {}
 };
 
 
@@ -217,10 +186,10 @@ class FullAST {
 
 public:
     AST* ast;
-    std::vector<CompilationUnit*> imports;
-    std::vector<Type*> topLevelDecls;
+    std::set<CompilationUnit*> imports;
+    std::set<Type*> topLevelDecls;
     
-    FullAST(AST* a, std::vector<CompilationUnit*> i, std::vector<Type*> t) : ast(a), imports(i), topLevelDecls(t) {}
+    FullAST(AST* a, std::set<CompilationUnit*> i, std::set<Type*> t) : ast(a), imports(i), topLevelDecls(t) {}
 };
 
 #endif
