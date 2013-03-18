@@ -14,15 +14,6 @@
 #include <assert.h>
 #include <set>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#pragma GCC diagnostic ignored "-Wweak-vtables"
-#pragma GCC diagnostic ignored "-Wpadded"
-#pragma GCC diagnostic ignored "-Wdisabled-macro-expansion"
-#pragma GCC diagnostic ignored "-Wmissing-noreturn"
-#include <boost/format.hpp>
-#pragma GCC diagnostic pop
-
 #define debug(x)    (std::cout << x << std::endl)
 
 static std::string extractName(AST* ast) {
@@ -278,7 +269,7 @@ void TypeChecker::checkMixins() {
             for (auto mixin : top->mixins) {
                 if (!this->checkMixin(mixin, fullAST)) {
                     this->errorList.push_back(*error_new(fullAST->ast->t->fileName, top->ast->t->line, top->ast->t->linePos,
-                                                        (boost::format("Mixin %1% not found in current path") % mixin).str()));
+                                                        ("Mixin " +  mixin + " not found in current path")));
                 }
             }
         }
@@ -296,7 +287,7 @@ void TypeChecker::checkNameClashes() {
             }
             else {
                 this->errorList.push_back(*error_new(type->ast->t->fileName, type->ast->t->line, type->ast->t->linePos,
-                                                     (boost::format("Name clash %1% found multiple times in the current module") % name).str()));
+                                                     "Name clash " + name + " found multiple times in the current module"));
             }
         }        
     }
