@@ -9,11 +9,12 @@
 #pragma GCC diagnostic ignored "-Wconditional-uninitialized"
 #pragma GCC diagnostic ignored "-Wexit-time-destructors"
 #pragma GCC diagnostic ignored "-Wglobal-constructors"
-#pragma GCC diagnostic ignored "-Wc++98-compat"
 #pragma GCC diagnostic ignored "-Wundef"
 #pragma GCC diagnostic ignored "-Wswitch-enum"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wmissing-noreturn"
+#pragma GCC diagnostic ignored "-Wdocumentation"
+#pragma GCC diagnostic ignored "-Wextra-semi"
 #include <boost/program_options.hpp>
 #pragma GCC diagnostic pop
 
@@ -75,12 +76,3 @@ int main(int argc, char** argv) {
     
     return EXIT_SUCCESS;
 }
-
-/*
- Marina Abramovic and Ulay started an intense love story in the 70s, performing art out of the van they lived in. When they felt the relationship had run its course, they decided to walk the Great Wall of China, each from one end, meeting for one last big hug in the middle and never seeing each other again. 
- 
- At her 2010 MoMa retrospective Marina performed ‘The Artist Is Present’ as part of the show, a minute of silence with each stranger who sat in front of her. Ulay arrived without her knowing it and this is what happened.  http://www.youtube.com/watch?v=XNcWRbh8wQ
- 
- */
- 
-
