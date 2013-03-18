@@ -1,5 +1,30 @@
+//
+//  Loader.cpp
+//  ponyC
+//
+//  Created by Michael Thorpe on 05/02/2012.
+//
+//
+
+
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wweak-vtables"
+#pragma GCC diagnostic ignored "-Wpadded"
+#pragma GCC diagnostic ignored "-Wdisabled-macro-expansion"
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
+#pragma GCC diagnostic ignored "-Wglobal-constructors"
+#pragma GCC diagnostic ignored "-Wundef"
+#pragma GCC diagnostic ignored "-Wcast-align"
+#pragma GCC diagnostic ignored "-Wexit-time-destructors"
 #include <boost/unordered_map.hpp>
+#include <boost/filesystem.hpp>
+#pragma GCC diagnostic pop
+
 #include "Loader.hpp"
+
+namespace fs = boost::filesystem;
 
 static boost::unordered_map<fs::path,CompilationUnit*> previouslySeenUnits;
 
