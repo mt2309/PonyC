@@ -6,8 +6,6 @@
 //
 //
 
-
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #pragma GCC diagnostic ignored "-Wweak-vtables"
@@ -26,12 +24,12 @@
 
 namespace fs = boost::filesystem;
 
-static boost::unordered_map<fs::path,CompilationUnit*> previouslySeenUnits;
+static boost::unordered_map<fs::path,CompilationUnit*> *previouslySeenUnits;
 
 static CompilationUnit* privateLoad(fs::path p, int stage) {
-    auto unit = previouslySeenUnits.find(p);
+    auto unit = previouslySeenUnits->find(p);
     
-    if (unit == previouslySeenUnits.end()) {
+    if (unit == previouslySeenUnits->end()) {
         return new CompilationUnit(p.string(), stage);
     } else {
         return (*unit).second;
@@ -55,6 +53,11 @@ static fs::path createPath(std::string currentPath, std::string relativePath) {
 }
 
 CompilationUnit* Loader::Load(std::string path, int stage) {
+    
+    if (previouslySeenUnits == nullptr) {
+        previouslySeenUnits = new boost::unordered_map<fs::path, CompilationUnit*>();
+    }
+    
     fs::path newPath(path);
     
     if (!exists(newPath)) {
@@ -67,6 +70,9 @@ CompilationUnit* Loader::Load(std::string path, int stage) {
 
 CompilationUnit* Loader::Load(std::string currentPath, std::string relativePath) {
     
+    if (previouslySeenUnits == nullptr) {
+        previouslySeenUnits = new boost::unordered_map<fs::path, CompilationUnit*>();
+    }
     
     /* This will need re-working if we want to load from a URL etc, but for now this will suffice
      

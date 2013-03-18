@@ -2,9 +2,6 @@
 #define ponyC_CompilationUnit_hpp
 
 #include "common.hpp"
-#include <boost/filesystem.hpp>
-
-namespace fs = boost::filesystem;
 
 typedef std::string program_name;
 

@@ -8,6 +8,22 @@
 #include "type_checker.hpp"
 #include "parser.hpp"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
+#pragma GCC diagnostic ignored "-Wweak-vtables"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wconditional-uninitialized"
+#pragma GCC diagnostic ignored "-Wexit-time-destructors"
+#pragma GCC diagnostic ignored "-Wglobal-constructors"
+#pragma GCC diagnostic ignored "-Wundef"
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
+#include <boost/filesystem.hpp>
+#pragma GCC diagnostic pop
+
+namespace fs = boost::filesystem;
+
 static std::string read_file(fs::path path) {
     std::ifstream infile(path.string().c_str());
     std::stringstream stream;
@@ -46,8 +62,6 @@ static std::vector<std::tuple<program_name,std::string>>* get_files_directory(st
     
     return vec;
 }
-
-static std::vector<FullAST*> previouslyParsedUnits;
 
 void CompilationUnit::buildUnit() {
     auto programText = get_files_directory(directoryName);
