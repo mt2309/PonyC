@@ -15,15 +15,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#pragma GCC diagnostic ignored "-Wweak-vtables"
-#pragma GCC diagnostic ignored "-Wpadded"
-#pragma GCC diagnostic ignored "-Wdisabled-macro-expansion"
-#pragma GCC diagnostic ignored "-Wmissing-noreturn"
-#include <boost/format.hpp>
-#pragma GCC diagnostic pop
-
 const std::vector<const symbol_t> Lexer::symbols2 = {
     { "->", TokenType::TK_RESULTS },
     { "::", TokenType::TK_PACKAGE },
@@ -181,7 +172,7 @@ bool Lexer::appendn(size_t length) {
         } else if( (this->m.at(i) >= 'A') && (this->m.at(i) <= 'F') ) {
             c += this->m.at(i) - 'A';
         } else {
-            this->push_error((boost::format("Escape sequence contains non-hexadecimal value %1%") % c).str());
+            this->push_error("Escape sequence contains non-hexadecimal value " + std::to_string(c));
             return false;
         }
     }
@@ -369,7 +360,7 @@ Token* Lexer::lexer_string() {
                     break;
                     
                 default:
-                    this->push_error((boost::format("Invalid escape sequence: %1%") % c).str());
+                    this->push_error("Invalid escape sequence: " + std::to_string(c));
                     break;
             }
         } else {
@@ -409,8 +400,7 @@ Token* Lexer::real(size_t v) {
         }
         else if (isalpha(c)) {
             if (!error) {
-                this->push_error((boost::format(
-                                "Invalid digit in real number: %1%") % c).str());
+                this->push_error("Invalid digit in real number: " + std::to_string(c));
                 error = true;
             }
         } else {
@@ -458,7 +448,7 @@ Token* Lexer::real(size_t v) {
                 // skip
             } else if( isalpha( c ) ) {
                 if (!error) {
-                    this->push_error((boost::format("Invalid digit in exponent: %1%") % c).str());
+                    this->push_error("Invalid digit in exponent: " + std::to_string(c));
                     error = true;
                 }
             } else {
@@ -511,7 +501,7 @@ Token* Lexer::hexadecimal() {
             // skip
         } else if( isalpha( c ) ) {
             if( !error ) {
-                this->push_error((boost::format("Invalid digit in hexadecimal number: %1%") % c ).str());
+                this->push_error("Invalid digit in hexadecimal number: " + std::to_string(c));
                 error = true;
             }
         } else {
@@ -549,7 +539,7 @@ Token* Lexer::decimal() {
         } else if( isalnum( c ) ) {
             if( !error )
             {
-                this->push_error((boost::format("Invalid digit in decimal number: %1%") % c ).str());
+                this->push_error("Invalid digit in decimal number: " + std::to_string(c));
                 error = true;
             }
         } else {
@@ -585,7 +575,7 @@ Token* Lexer::binary() {
         } else if( isalnum( c ) ) {
             if( !error )
             {
-                this->push_error((boost::format("Invalid digit in binary number: %1%") % c ).str());
+                this->push_error("Invalid digit in binary number: " + std::to_string(c));
                 error = true;
             }
         } else {
@@ -706,7 +696,7 @@ Token* Lexer::symbol() {
         }
     }
     
-    this->push_error((boost::format("Unknown symbol: %1%") % sym[0]).str());
+    this->push_error("Unknown symbol: " + std::to_string(sym[0]));
     return nullptr;
 }
 
@@ -757,7 +747,7 @@ Token* Lexer::next() {
             }
             else
             {
-                this->push_error((boost::format("Unrecognized character: %1%") % c ).str());
+                this->push_error("Unrecognized character: " + std::to_string(c));
                 this->step();
             }
         }
