@@ -12,14 +12,8 @@
 #include <assert.h>
 #include <iostream>
 
-//#pragma GCC diagnostic push
-//#pragma GCC diagnostic ignored "-Wsign-conversion"
-//#pragma GCC diagnostic ignored "-Wweak-vtables"
-//#pragma GCC diagnostic ignored "-Wpadded"
-//#pragma GCC diagnostic ignored "-Wdisabled-macro-expansion"
-//#pragma GCC diagnostic ignored "-Wmissing-noreturn"
-//#include <boost/format.hpp>
-//#pragma GCC diagnostic pop
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wc++98-compat-pedantic"
 
 TokenType Parser::current() {
     return this->t->id;
@@ -53,11 +47,11 @@ void Parser::push_error(std::string err) {
     this->error_list.push_back(*error_new(this->t->fileName, this->t->line, this->t->linePos, err));
 }
 
-bool Parser::accept(TokenType id, AST* ast , int slot) {
+bool Parser::accept(TokenType id, AST* ast , size_t slot) {
         
     if (this->current() != id) { return false; }
     
-    if ((ast != nullptr) && (slot >= 0)) {
+    if ((ast != nullptr) && (slot != SIZE_MAX)) {
         assert(slot < AST_SLOTS);
         AST* child = this->ast_token();
         ast->children.at(slot) = child;
@@ -69,7 +63,7 @@ bool Parser::accept(TokenType id, AST* ast , int slot) {
     return true;
 }
 
-bool Parser::expect(TokenType id , AST* ast ,int slot) {
+bool Parser::expect(TokenType id , AST* ast ,size_t slot) {
     if (this->accept(id, ast, slot)) {
         return true;
     }
@@ -82,7 +76,7 @@ bool Parser::expect(TokenType id , AST* ast ,int slot) {
     return false;
 }
 
-void Parser::rule(rule_t f, AST* ast, int slot) {
+void Parser::rule(rule_t f, AST* ast, size_t slot) {
     assert(ast != nullptr);
     assert(slot >= 0);
     assert(slot < AST_SLOTS);
@@ -91,9 +85,9 @@ void Parser::rule(rule_t f, AST* ast, int slot) {
     ast->children.at(slot) = child;
 }
 
-void Parser::rulelist(rule_t rule, TokenType id, AST* ast, int slot) {
+void Parser::rulelist(rule_t rule, TokenType id, AST* ast, size_t slot) {
     assert(ast != nullptr);
-    assert(slot >= 0);
+//    assert(slot >= 0);
     assert(slot < AST_SLOTS);
     
     AST* last = nullptr;
@@ -109,7 +103,7 @@ void Parser::rulelist(rule_t rule, TokenType id, AST* ast, int slot) {
         else
             ast->children.at(slot) = child;
         
-        if (!this->accept(id, ast, -1))
+        if (!this->accept(id, ast, SIZE_MAX))
             return;
         
         last = child;
@@ -127,7 +121,7 @@ AST* Parser::rulealt(const std::vector<alt_t> alt_vec) {
     return nullptr;
 }
 
-void Parser::rulealtlist(const std::vector<alt_t> alt_vec, AST* ast, int slot) {
+void Parser::rulealtlist(const std::vector<alt_t> alt_vec, AST* ast, size_t slot) {
     assert(ast != nullptr);
     assert(slot >= 0);
     assert(slot < AST_SLOTS);
@@ -200,14 +194,14 @@ AST* Parser::command() {
     
     AST* ast;
     
-    if (this->accept(TokenType::TK_LPAREN, nullptr, -1)) {
+    if (this->accept(TokenType::TK_LPAREN, nullptr, SIZE_MAX)) {
         ast = this->expr();
-        this->expect(TokenType::TK_RPAREN, nullptr, -1);
+        this->expect(TokenType::TK_RPAREN, nullptr, SIZE_MAX);
     } else if (this->current() == TokenType::TK_LBRACKET) {
         ast = this->ast_token();
         ast->t->id = TokenType::TK_LIST;
         this->rulelist(&Parser::arg, TokenType::TK_COMMA, ast, 0);
-        this->expect(TokenType::TK_RBRACKET, ast, -1);
+        this->expect(TokenType::TK_RBRACKET, ast, SIZE_MAX);
     } else {
         ast = this->atom();
     }
@@ -321,7 +315,7 @@ AST* Parser::arg() {
     this->rule(&Parser::expr, ast, 0);
     this->rule(&Parser::oftype, ast, 1);
     
-    if (this->accept(TokenType::TK_ASSIGN, ast, -1)) {
+    if (this->accept(TokenType::TK_ASSIGN, ast, SIZE_MAX)) {
         this->rule(&Parser::expr, ast, 2);
     }
     
@@ -331,11 +325,11 @@ AST* Parser::arg() {
 AST* Parser::args() {
     AST* ast = this->ast_new(TokenType::TK_ARGS);
     
-    this->expect(TokenType::TK_LPAREN, ast, -1);
+    this->expect(TokenType::TK_LPAREN, ast, SIZE_MAX);
     
-    if (!this->accept(TokenType::TK_RPAREN, ast, -1)) {
+    if (!this->accept(TokenType::TK_RPAREN, ast, SIZE_MAX)) {
         this->rulelist(&Parser::arg, TokenType::TK_COMMA, ast, 0);
-        this->expect(TokenType::TK_RPAREN, ast, -1);
+        this->expect(TokenType::TK_RPAREN, ast, SIZE_MAX);
     }
     
     return ast;
@@ -347,7 +341,7 @@ AST* Parser::conditional() {
     this->rule(&Parser::expr, ast, 0);
     this->rule(&Parser::block, ast, 1);
     
-    if (this->accept(TokenType::TK_ELSE, ast, -1)) {
+    if (this->accept(TokenType::TK_ELSE, ast, SIZE_MAX)) {
         if (this->current() == TokenType::TK_IF)
             this->rule(&Parser::conditional, ast, 2);
         else
@@ -371,9 +365,9 @@ AST* Parser::forloop() {
     AST* ast = this->ast_expect(TokenType::TK_FOR);
     
     this->rulelist(&Parser::forvar, TokenType::TK_COMMA, ast, 0 );
-    this->expect(TokenType::TK_IN, ast, -1 );
-    this->rule(&Parser::expr, ast, 1 );
-    this->rule(&Parser::block, ast, 2 );
+    this->expect(TokenType::TK_IN, ast, SIZE_MAX);
+    this->rule(&Parser::expr, ast, 1);
+    this->rule(&Parser::block, ast, 2);
     
     return ast;
 }
@@ -392,7 +386,7 @@ AST* Parser::doloop() {
     AST* ast = this->ast_expect(TokenType::TK_DO);
     
     this->rule(&Parser::block, ast, 1 );
-    this->expect(TokenType::TK_WHILE, ast, -1 );
+    this->expect(TokenType::TK_WHILE, ast, SIZE_MAX);
     this->rule(&Parser::expr, ast, 0 );
     
     return ast;
@@ -401,12 +395,12 @@ AST* Parser::doloop() {
 AST* Parser::casevar() {
     AST* ast = this->ast_new(TokenType::TK_CASEVAR);
     
-    if (this->accept(TokenType::TK_AS, ast, -1)) {
+    if (this->accept(TokenType::TK_AS, ast, SIZE_MAX)) {
         this->rule(&Parser::forvar, ast, 0);
     } else {
         this->rule(&Parser::expr, ast, 1);
         
-        if (this->accept(TokenType::TK_AS, ast, -1))
+        if (this->accept(TokenType::TK_AS, ast, SIZE_MAX))
             this->rule(&Parser::forvar, ast, 0);
     }
     
@@ -423,7 +417,7 @@ AST* Parser::caseblock() {
         this->rulelist(&Parser::casevar, TokenType::TK_COMMA, ast, 0);
     }
     
-    if (this->accept(TokenType::TK_IF, ast, -1)) {
+    if (this->accept(TokenType::TK_IF, ast, SIZE_MAX)) {
         this->rule(&Parser::expr, ast, 1);
     }
     
@@ -440,10 +434,10 @@ AST* Parser::match() {
     
     AST* ast = this->ast_expect(TokenType::TK_MATCH);
     
-    this->rulelist(&Parser::expr, TokenType::TK_COMMA, ast, 0 );
-    this->expect(TokenType::TK_LBRACE, ast, -1 );
-    this->rulealtlist(alt, ast, 1 );
-    this->expect(TokenType::TK_RBRACE, ast, -1 );
+    this->rulelist(&Parser::expr, TokenType::TK_COMMA, ast, 0);
+    this->expect(TokenType::TK_LBRACE, ast, SIZE_MAX);
+    this->rulealtlist(alt, ast, 1);
+    this->expect(TokenType::TK_RBRACE, ast, SIZE_MAX);
     
     return ast;
 }
@@ -451,7 +445,7 @@ AST* Parser::match() {
 AST* Parser::catchblock() {
     AST* ast = this->ast_expect( TokenType::TK_CATCH );
     
-    this->rule( &Parser::block, ast, 0 );
+    this->rule( &Parser::block, ast, 0);
     
     return ast;
 }
@@ -459,7 +453,7 @@ AST* Parser::catchblock() {
 AST* Parser::always() {
     AST* ast = this->ast_expect(TokenType::TK_ALWAYS);
     
-    this->rule( &Parser::block, ast, 0 );
+    this->rule( &Parser::block, ast, 0);
     
     return ast;
 }
@@ -471,9 +465,9 @@ AST* Parser::lvalue() {
     {
         ast = this->ast_token();
         
-        this->expect(TokenType::TK_ID, ast, 0 );
+        this->expect(TokenType::TK_ID, ast, 0);
         
-        this->rule(&Parser::oftype, ast, 1 );
+        this->rule(&Parser::oftype, ast, 1);
     } else {
         ast = this->command();
     }
@@ -487,7 +481,7 @@ AST* Parser::assignment() {
     
     this->rulelist( &Parser::lvalue, TokenType::TK_COMMA, ast, 0 );
     
-    if( this->accept(TokenType::TK_ASSIGN, ast, -1 ))
+    if( this->accept(TokenType::TK_ASSIGN, ast, SIZE_MAX))
         this->rulelist(&Parser::expr, TokenType::TK_COMMA, ast, 1 );
     
     return ast;
@@ -521,7 +515,7 @@ AST* Parser::block() {
     };
 
     AST* ast = this->ast_new( TokenType::TK_BLOCK );
-    this->expect(TokenType::TK_LBRACE, ast, -1 );
+    this->expect(TokenType::TK_LBRACE, ast, SIZE_MAX);
     this->rulealtlist(alt, ast, 0 );
     
     if(this->current() == TokenType::TK_CATCH)
@@ -530,17 +524,17 @@ AST* Parser::block() {
     if (this->current() == TokenType::TK_ALWAYS)
         this->rule(&Parser::always, ast, 2);
     
-    this->expect(TokenType::TK_RBRACE, ast, -1 );
+    this->expect(TokenType::TK_RBRACE, ast, SIZE_MAX);
     return ast;
 }
 
 AST* Parser::formalargs() {
     AST* ast = this->ast_new( TokenType::TK_FORMALARGS );
         
-    if( this->accept(TokenType::TK_LBRACKET, ast, -1 ) )
+    if( this->accept(TokenType::TK_LBRACKET, ast, SIZE_MAX))
     {
         this->rulelist( &Parser::arg, TokenType::TK_COMMA, ast, 0 );
-        this->expect(TokenType::TK_RBRACKET, ast, -1 );
+        this->expect(TokenType::TK_RBRACKET, ast, SIZE_MAX);
     }
     
     return ast;
@@ -552,7 +546,7 @@ AST* Parser::typelambda() {
     this->rule(&Parser::mode, ast, 0 );
     this->rule(&Parser::args, ast, 1 );
     
-    if( this->accept(TokenType::TK_RESULTS, ast, -1 ) )
+    if( this->accept(TokenType::TK_RESULTS, ast, SIZE_MAX))
     {
         this->rule( &Parser::args, ast, 2 );
     }
@@ -565,7 +559,7 @@ AST* Parser::typelambda() {
 AST* Parser::lambda() {
     AST* ast = this->typelambda();
     
-    if( this->accept(TokenType::TK_IS, ast, -1 ) )
+    if( this->accept(TokenType::TK_IS, ast, SIZE_MAX) )
         this->rule(&Parser::block, ast, 4 );
     
     return ast;
@@ -576,7 +570,7 @@ AST* Parser::typeclass() {
     
     this->expect(TokenType::TK_TYPEID, ast, 0 );
     
-    if(this->accept(TokenType::TK_PACKAGE, ast, -1 )) {
+    if(this->accept(TokenType::TK_PACKAGE, ast, SIZE_MAX)) {
         this->expect(TokenType::TK_TYPEID, ast, 1 );
     }
     
@@ -605,13 +599,14 @@ AST* Parser::typeelement() {
     if( ast == NULL ) {
         this->push_error("Expected partial type, type or lambda");
     }
+    
     return ast;
 }
 
 AST* Parser::oftype() {
     AST* ast = this->ast_new(TokenType::TK_OFTYPE);
     
-    if(this->accept(TokenType::TK_OFTYPE, ast, -1 ))
+    if(this->accept(TokenType::TK_OFTYPE, ast, SIZE_MAX))
         rulelist(&Parser::typeelement, TokenType::TK_OR, ast, 0 );
     
     return ast;
@@ -620,11 +615,11 @@ AST* Parser::oftype() {
 AST* Parser::field() {
     AST* ast = this->ast_new( TokenType::TK_FIELD );
     
-    this->expect(TokenType::TK_VAR, ast, -1 );
+    this->expect(TokenType::TK_VAR, ast, SIZE_MAX);
     this->expect(TokenType::TK_ID, ast, 0 );
     this->rule( &Parser::oftype, ast, 1 );
     
-    if(this->accept(TokenType::TK_ASSIGN, ast, -1 ))
+    if(this->accept(TokenType::TK_ASSIGN, ast, SIZE_MAX))
         this->rule( &Parser::expr, ast, 2 );
     
     return ast;
@@ -676,7 +671,7 @@ AST* Parser::function() {
     this->rule(&Parser::formalargs, ast, 2 );
     this->rule(&Parser::args, ast, 3 );
     
-    if( this->accept(TokenType::TK_RESULTS, ast, -1 ) )
+    if( this->accept(TokenType::TK_RESULTS, ast, SIZE_MAX))
         this->rule(&Parser::args, ast, 4 );
     
     this->accept(TokenType::TK_THROWS, ast, 5 );
@@ -713,9 +708,9 @@ AST* Parser::typebody() {
     
     AST* ast = this->ast_new( TokenType::TK_TYPEBODY );
     
-    this->expect(TokenType::TK_LBRACE, ast, -1 );
+    this->expect(TokenType::TK_LBRACE, ast, SIZE_MAX);
     this->rulealtlist(alt, ast, 0 );
-    this->expect(TokenType::TK_RBRACE, ast, -1 );
+    this->expect(TokenType::TK_RBRACE, ast, SIZE_MAX);
     
     return ast;
 }
@@ -723,7 +718,7 @@ AST* Parser::typebody() {
 AST* Parser::is() {
     AST* ast = this->ast_new( TokenType::TK_IS );
     
-    if(this->accept(TokenType::TK_IS, ast, -1 ))
+    if(this->accept(TokenType::TK_IS, ast, SIZE_MAX))
         this->rulelist(&Parser::typeclass, TokenType::TK_COMMA, ast, 0 );
     
     return ast;
@@ -776,7 +771,7 @@ AST* Parser::map() {
     AST* ast = this->ast_new(TokenType::TK_MAP);
     
     this->expect(TokenType::TK_ID, ast, 0 );
-    this->expect(TokenType::TK_ASSIGN, ast, -1 );
+    this->expect(TokenType::TK_ASSIGN, ast, SIZE_MAX);
     this->expect(TokenType::TK_ID, ast, 1 );
     
     return ast;
@@ -785,9 +780,9 @@ AST* Parser::map() {
 AST* Parser::declaremap() {
     AST* ast = this->ast_new(TokenType::TK_DECLAREMAP);
     
-    if(this->accept(TokenType::TK_LBRACE, ast, -1 )) {
+    if(this->accept(TokenType::TK_LBRACE, ast, SIZE_MAX)) {
         this->rulelist(&Parser::map, TokenType::TK_COMMA, ast, 0 );
-        this->expect(TokenType::TK_RBRACE, ast, -1 );
+        this->expect(TokenType::TK_RBRACE, ast, SIZE_MAX);
     }
     
     return ast;
@@ -807,7 +802,7 @@ AST* Parser::use() {
     AST* ast = this->ast_expect(TokenType::TK_USE);
     
     if( this->accept(TokenType::TK_TYPEID, ast, 0 ) )
-        this->expect(TokenType::TK_ASSIGN, ast, -1 );
+        this->expect(TokenType::TK_ASSIGN, ast, SIZE_MAX);
     
     this->expect(TokenType::TK_STRING, ast, 1 );
     return ast;
@@ -829,7 +824,7 @@ AST* Parser::module() {
     
     this->rulealtlist(alt, ast, 0 );
     
-    this->expect(TokenType::TK_EOF, ast, -1);
+    this->expect(TokenType::TK_EOF, ast, SIZE_MAX);
     
     return ast;
 }
@@ -848,3 +843,6 @@ AST* Parser::parse() {
     }
     return this->m_ast;
 }
+
+#pragma GCC diagnostic pop
+

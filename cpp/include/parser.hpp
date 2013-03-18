@@ -37,12 +37,9 @@ private:
 
 public:
 
-    Parser(std::string _file_name, std::string file) {
-        this->program_text = file;
-        this->file_name = _file_name;
-        this->error_list = std::vector<error_t>();
+    Parser(std::string _file_name, std::string file) : program_text(file), file_name(_file_name), error_list() {
         this->lexer = new Lexer(_file_name,file,this->error_list);
-    };
+    }
 
     std::vector<error_t> error_list;
 
@@ -50,10 +47,10 @@ public:
     void push_error(std::string err);
 
     TokenType current();
-    bool accept(TokenType, AST*,int);
-    bool expect(TokenType, AST*,int);
-    void rule(rule_t,AST*,int);
-    void rulelist(rule_t,TokenType,AST*,int);
+    bool accept(TokenType, AST*,size_t);
+    bool expect(TokenType, AST*,size_t);
+    void rule(rule_t,AST*,size_t);
+    void rulelist(rule_t,TokenType,AST*,size_t);
     AST* tokenrule();
     AST* mode();
 
@@ -62,8 +59,8 @@ private:
     AST* ast_new(TokenType);
     AST* ast_token();
     AST* ast_expect(TokenType);
-    AST* rulealt(const std::vector<alt_t> alt_vec);
-    void rulealtlist(const std::vector<alt_t> alt_vec, AST* ast, int slot);
+    AST* rulealt(const std::vector<alt_t>);
+    void rulealtlist(const std::vector<alt_t>, AST*, size_t);
 
     AST* lambda();
     AST* typeclass();
