@@ -28,12 +28,13 @@ class Variable {
     
 public:
     std::string name;
-    std::string type;
-    Variable(std::string n, std::string t) : name(n), type(t) {}
+    std::vector<std::string> type;
+    Variable(std::string n, std::vector<std::string> t) : name(n), type(t) {}
 };
 
 class Delegate {
 public:
+    std::string ID;
     
 };
 

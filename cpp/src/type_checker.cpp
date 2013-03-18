@@ -70,6 +70,38 @@ Type* TypeChecker::newType(AST* ast, Kind k, std::set<ClassContents*> contents) 
     return new Type(extractName(ast),k,ast,mixins,contents);
 }
 
+static std::string getType(AST* ast) {
+    
+    if (ast == nullptr) {
+        debug("null pointer passed to getType");
+        return std::string("");
+    }
+    
+    switch (ast->t->id) {
+        case TokenType::TK_PARTIAL:
+            break;
+        case TokenType::TK_TYPEID:
+            debug(ast->children.at(0)->t->string);
+            return ast->t->string;
+        case TokenType::TK_LAMBDA:
+            break;
+        default:
+            break;
+    }
+    
+    return "";
+}
+
+static void getTypeList(AST* ast, std::vector<std::string> &types) {
+    AST* current = ast;
+    
+    while (current != nullptr) {
+        assert(current->t->id == TokenType::TK_OFTYPE);
+        types.push_back(getType(current->children.at(0)));
+        current = current->sibling;
+    }
+}
+
 static void getArgsList(AST* ast, std::vector<Variable*> &inputs) {
     AST* current = ast;
     
@@ -78,15 +110,21 @@ static void getArgsList(AST* ast, std::vector<Variable*> &inputs) {
         
         AST* a = current->children.at(0);
         
-        if (a != nullptr)
-            inputs.push_back(new Variable(a->children.at(0)->t->string, a->children.at(1)->t->string));
+        if (a != nullptr) {
+            auto type = std::vector<std::string>();
+            getTypeList(a->children.at(1), type);
+            for(auto t : type) debug(t);
+            inputs.push_back(new Variable(a->children.at(0)->t->string, type));
+        }
         
         current = current->sibling;
     }
 }
 
 static ClassContents* newVarContent(AST* ast) {
-    Variable* v = new Variable(ast->children.at(0)->t->string, ast->children.at(0)->t->string);
+    auto type = std::vector<std::string>();
+    getTypeList(ast, type);
+    Variable* v = new Variable(ast->children.at(0)->t->string, type);
     ClassContents* c = new ClassContents(ast, v);
     return c;
 }
