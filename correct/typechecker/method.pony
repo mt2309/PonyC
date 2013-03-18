@@ -1,5 +1,5 @@
 object M {
-  function method()->() {
+  function method(q:Int)->() {
     //does nothing
   }
 }
