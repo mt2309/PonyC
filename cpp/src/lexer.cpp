@@ -15,6 +15,10 @@
 #include <stdlib.h>
 #include <math.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wconversion"
+
 const std::vector<const symbol_t> Lexer::symbols2 = {
     { "->", TokenType::TK_RESULTS },
     { "::", TokenType::TK_PACKAGE },
@@ -772,3 +776,6 @@ Lexer::Lexer(std::string _fileName, std::string input, std::vector<error_t> list
     this->error_list = list;
     this->buffer = std::string("");
 }
+
+#pragma GCC diagnostic pop
+
