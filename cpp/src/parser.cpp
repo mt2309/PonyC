@@ -42,7 +42,6 @@ AST* Parser::ast_expect(TokenType id) {
     return nullptr;
 }
 
-
 void Parser::push_error(std::string err) {
     this->error_list.push_back(*error_new(this->t->fileName, this->t->line, this->t->linePos, err));
 }
@@ -845,4 +844,3 @@ AST* Parser::parse() {
 }
 
 #pragma GCC diagnostic pop
-
