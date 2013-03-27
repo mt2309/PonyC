@@ -20,7 +20,7 @@
 #include <boost/filesystem.hpp>
 #pragma GCC diagnostic pop
 
-#include "Loader.hpp"
+#include "Loader.h"
 
 namespace fs = boost::filesystem;
 

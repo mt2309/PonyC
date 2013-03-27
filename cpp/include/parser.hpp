@@ -14,7 +14,7 @@
 
 #include "lexer.hpp"
 #include "error.hpp"
-#include "common.hpp"
+#include "Common.h"
 
 typedef class Parser Parser;
 

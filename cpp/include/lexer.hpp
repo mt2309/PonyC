@@ -12,7 +12,7 @@
 #include <vector>
 #include <string>
 #include "error.hpp"
-#include "common.hpp"
+#include "Common.h"
 
 
 typedef struct symbol_t {

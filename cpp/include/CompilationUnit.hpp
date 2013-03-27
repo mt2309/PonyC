@@ -1,7 +1,7 @@
 #ifndef ponyC_CompilationUnit_hpp
 #define ponyC_CompilationUnit_hpp
 
-#include "common.hpp"
+#include "Common.h"
 
 typedef std::string program_name;
 

@@ -12,7 +12,7 @@
 #include <vector>
 #include <set>
 #include "CompilationUnit.hpp"
-#include "common.hpp"
+#include "Common.h"
 #include "error.hpp"
 
 enum class Content {

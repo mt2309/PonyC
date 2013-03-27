@@ -18,7 +18,7 @@
 #include <boost/program_options.hpp>
 #pragma GCC diagnostic pop
 
-#include "Loader.hpp"
+#include "Loader.h"
 
 namespace po = boost::program_options;
 

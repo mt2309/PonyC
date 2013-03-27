@@ -8,7 +8,7 @@
 
 #include "type_checker.hpp"
 #include "CompilationUnit.hpp"
-#include "Loader.hpp"
+#include "Loader.h"
 #include <iostream>
 #include <stdlib.h>
 #include <assert.h>

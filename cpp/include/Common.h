@@ -1,15 +1,16 @@
-#ifndef ponyC_common_hpp
-#define ponyC_common_hpp
+#ifndef CPP_INCLUDE_COMMON_H_
+#define CPP_INCLUDE_COMMON_H_
+
+// Copyright 2013 <Michael Thorpe>
 
 #define AST_SLOTS 7
+#define FILE_EXTENSION ".pony"
 
+#include <type_traits>
 #include <string>
 #include <vector>
 #include <set>
 #include <ostream>
-#include <type_traits>
-
-#define FILE_EXTENSION ".pony"
 
 enum class TokenType : unsigned int {
     // primitives
@@ -100,11 +101,11 @@ enum class TokenType : unsigned int {
 
     // abstract
     TK_MODULE   = 73,
-    TK_DECLAREMAP=74,
+    TK_DECLAREMAP = 74,
     TK_MAP      = 75,
     TK_TYPEBODY = 76,
-    TK_TYPECLASS= 77,
-    TK_FORMALARGS=78,
+    TK_TYPECLASS = 77,
+    TK_FORMALARGS = 78,
     TK_FIELD    = 79,
     TK_ARG      = 80,
     TK_ARGS     = 81,
@@ -115,9 +116,8 @@ enum class TokenType : unsigned int {
     TK_SCOLON   = 85,
 
     TK_EOF      = 86
-
 };
-    
+
 #define tokTypeInt(id) (static_cast<std::underlying_type<TokenType>::type>(id))
 
 enum class Kind {
@@ -129,32 +129,34 @@ enum class Kind {
     TYPE_DECLARE
 };
 
-class Token {
-    
-public:
+struct Token {
+    public:
     std::string fileName;
     size_t line;
     size_t linePos;
-    
+
     union {
         std::string string;
         double flt;
         size_t integer;
     };
-    
+
     TokenType id;
-    
-    Token(std::string file, size_t l, size_t lp) : fileName(file), line(l), linePos(lp) {}
-    Token(std::string file, size_t l, size_t lp, TokenType t) : fileName(file), line(l), linePos(lp), id(t) {}
+
+    Token(std::string file, size_t l, size_t lp) :  fileName(file),
+                                                    line(l), linePos(lp) {}
+
+    Token(std::string file, size_t l, size_t lp, TokenType t) : fileName(file),
+                                                                line(l),
+                                                                linePos(lp),
+                                                                id(t) {}
     ~Token() {}
 };
 
-typedef class Type Type;
+typedef struct Type Type;
 typedef class ClassContents ClassContents;
 
-class AST {
-    
-public:
+struct AST {
     Token* t;
     AST* sibling;
     std::vector<AST*> children;
@@ -163,9 +165,7 @@ public:
     }
 };
 
-class Type {
-    
-public:
+struct Type {
     std::string name;
 
     Kind kind;
@@ -173,8 +173,10 @@ public:
     AST* ast;
     std::vector<std::string> mixins;
     std::set<ClassContents*> contents;
-    
-    Type(std::string n, Kind k, AST* a, std::vector<std::string> m, std::set<ClassContents*> c) : name(n), kind(k), ast(a), mixins(m), contents(c) {}
+
+    Type(std::string n, Kind k, AST* a, std::vector<std::string> m,
+         std::set<ClassContents*> c) :  name(n), kind(k), ast(a),
+                                        mixins(m), contents(c) {}
 };
 
 
@@ -182,14 +184,13 @@ public:
 
 typedef class CompilationUnit CompilationUnit;
 
-class FullAST {
-
-public:
+struct FullAST {
     AST* ast;
     std::set<CompilationUnit*> imports;
     std::set<Type*> topLevelDecls;
-    
-    FullAST(AST* a, std::set<CompilationUnit*> i, std::set<Type*> t) : ast(a), imports(i), topLevelDecls(t) {}
+
+    FullAST(AST* a, std::set<CompilationUnit*> i,
+            std::set<Type*> t) : ast(a), imports(i), topLevelDecls(t) {}
 };
 
-#endif
+#endif  // CPP_INCLUDE_COMMON_H_
