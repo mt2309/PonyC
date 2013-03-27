@@ -65,21 +65,21 @@ static std::string getType(AST* ast) {
     
     if (ast == nullptr) {
         debug("null pointer passed to getType");
-        return std::string("");
+        return "";
     }
-    
-    switch (ast->t->id) {
+        
+    switch (ast->children.at(0)->t->id) {
         case TokenType::TK_PARTIAL:
             break;
         case TokenType::TK_TYPEID:
-            debug(ast->children.at(0)->t->string);
-            return ast->t->string;
+            debug("The type is: " + ast->children.at(0)->t->string + " !");
+            return ast->children.at(0)->t->string;
         case TokenType::TK_LAMBDA:
             break;
         default:
             break;
     }
-    
+    debug("here");
     return "";
 }
 
@@ -93,7 +93,7 @@ static void getTypeList(AST* ast, std::vector<std::string> &types) {
     }
 }
 
-static void getArgsList(AST* ast, std::vector<Variable*> &inputs) {
+static void getArgsList(AST* ast, std::vector<Variable*> &types) {
     AST* current = ast;
     
     while (current != nullptr) {
@@ -104,8 +104,7 @@ static void getArgsList(AST* ast, std::vector<Variable*> &inputs) {
         if (a != nullptr) {
             auto type = std::vector<std::string>();
             getTypeList(a->children.at(1), type);
-            for(auto t : type) debug(t);
-            inputs.push_back(new Variable(a->children.at(0)->t->string, type));
+            types.push_back(new Variable(a->children.at(0)->t->string, type));
         }
         
         current = current->sibling;
