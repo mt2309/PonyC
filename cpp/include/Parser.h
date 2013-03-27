@@ -12,8 +12,8 @@
 #include <string>
 #include <vector>
 
-#include "lexer.hpp"
-#include "error.hpp"
+#include "Lexer.h"
+#include "Error.h"
 #include "Common.h"
 
 typedef class Parser Parser;

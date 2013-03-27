@@ -11,9 +11,9 @@
 
 #include <vector>
 #include <set>
-#include "CompilationUnit.hpp"
+#include "CompilationUnit.h"
 #include "Common.h"
-#include "error.hpp"
+#include "Error.h"
 
 enum class Content {
     CN_VAR,
@@ -25,7 +25,7 @@ enum class Content {
 };
 
 class Variable {
-    
+
 public:
     std::string name;
     std::vector<std::string> type;
@@ -35,38 +35,38 @@ public:
 class Delegate {
 public:
     std::string ID;
-    
+
 };
 
 class C_New {
 public:
-    
+
 };
 
 class Ambient {
 public:
-    
+
 };
 
 class Function {
 public:
     std::vector<Variable*> arguments;
     std::vector<Variable*> outputs;
-    
+
     Function(std::vector<Variable*> a, std::vector<Variable*> o) : arguments(a), outputs(o) {}
 };
 
 class Message {
 public:
-    
+
 };
 
 class ClassContents {
-    
+
 public:
     AST* ast;
     Content type;
-    
+
     // hacky subtyping
     union {
         Variable* variable;
@@ -76,7 +76,7 @@ public:
         Function* function;
         Message* message;
     };
-    
+
     ClassContents(AST* a, Variable* v)  : ast(a), type(Content::CN_VAR), variable(v) {}
     ClassContents(AST* a, Delegate* d)  : ast(a), type(Content::CN_DELEGATE), delegate(d) {}
     ClassContents(AST* a, C_New* c)     : ast(a), type(Content::CN_NEW), c_new(c) {}

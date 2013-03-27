@@ -11,7 +11,7 @@
 
 #include <vector>
 #include <string>
-#include "error.hpp"
+#include "Error.h"
 #include "Common.h"
 
 
@@ -41,7 +41,7 @@ private:
 
 public:
     Lexer(std::string,std::string,std::vector<error_t>);
-    
+
     Token* next();
     void adv(size_t);
     char look();

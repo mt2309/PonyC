@@ -6,7 +6,7 @@
 //
 //
 
-#include "error.hpp"
+#include "Error.h"
 #include <stdlib.h>
 #include <string>
 
@@ -15,6 +15,6 @@ const error_t* error_new(std::string prog_name, size_t line, size_t pos, std::st
     err->prog_name = prog_name;
     err->line = line;
     err->line_pos = pos;
-    err->message = str;    
+    err->message = str;
     return err;
 }

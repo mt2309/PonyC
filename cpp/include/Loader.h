@@ -1,7 +1,7 @@
 #ifndef __ponyC__Loader__
 #define __ponyC__Loader__
 
-#include "CompilationUnit.hpp"
+#include "CompilationUnit.h"
 
 // Currently no assertion that imports are a DAG
 class Loader {

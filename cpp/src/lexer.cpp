@@ -6,8 +6,8 @@
 //
 //
 
-#include "lexer.hpp"
-#include "error.hpp"
+#include "Lexer.h"
+#include "Error.h"
 
 #include <assert.h>
 #include <vector>
@@ -22,17 +22,17 @@
 const std::vector<const symbol_t> Lexer::symbols2 = {
     { "->", TokenType::TK_RESULTS },
     { "::", TokenType::TK_PACKAGE },
-    
+
     { "<<", TokenType::TK_LSHIFT },
     { ">>", TokenType::TK_RSHIFT },
-    
+
     { "==", TokenType::TK_EQ },
     { "!=", TokenType::TK_NOTEQ },
     { "#=", TokenType::TK_STEQ },
     { "~=", TokenType::TK_NSTEQ },
-    
+
     { "[:", TokenType::TK_MODE },
-    
+
     { "<=", TokenType::TK_LE },
     { ">=", TokenType::TK_GE },
 };
@@ -45,29 +45,29 @@ const std::vector<const symbol_t> Lexer::symbols1 = {
     { "[", TokenType::TK_LBRACKET },
     { "]", TokenType::TK_RBRACKET },
     { ",", TokenType::TK_COMMA },
-    
+
     { ".", TokenType::TK_CALL },
     { ":", TokenType::TK_OFTYPE },
     { "\\", TokenType::TK_PARTIAL },
     { "=", TokenType::TK_ASSIGN },
     { "!", TokenType::TK_BANG },
-    
+
     { "+", TokenType::TK_PLUS },
     { "-", TokenType::TK_MINUS },
     { "*", TokenType::TK_MULTIPLY },
     { "/", TokenType::TK_DIVIDE },
     { "%", TokenType::TK_MOD },
-    
+
     { "<", TokenType::TK_LT },
     { ">", TokenType::TK_GT },
-    
+
     { "|", TokenType::TK_OR },
     { "&", TokenType::TK_AND },
     { "^", TokenType::TK_XOR },
-    
+
     { "@", TokenType::TK_UNIQ },
     { "~", TokenType::TK_MUT },
-    
+
     { ";", TokenType::TK_SCOLON }
 };
 
@@ -120,7 +120,7 @@ static bool isSymbol(char c) {
 
 void Lexer::adv(size_t count) {
     assert(this->len >= count);
-    
+
     this->ptr += count;
     this->len -= count;
     this->line_pos += count;
@@ -155,20 +155,20 @@ void Lexer::append(char c) {
 }
 
 bool Lexer::appendn(size_t length) {
-    
+
     size_t prev_pos = this->ptr;
     uint32_t c = 0;
-    
+
     if (this->len < length) {
         this->string_terminate();
         return false;
     }
-    
+
     this->adv(length);
-    
+
     for (size_t i = prev_pos; i < (len+prev_pos); i++) {
         c <<= 4;
-        
+
         if( (this->m.at(i) >= '0') && (this->m.at(i) <= '9') ) {
             c += this->m.at(i) - '0';
         } else if( (this->m.at(i) >= 'a') && (this->m.at(i) <= 'f') ) {
@@ -180,7 +180,7 @@ bool Lexer::appendn(size_t length) {
             return false;
         }
     }
-    
+
     if( c <= 0x7F ) {
         this->append(c & 0x7F );
     } else if(c <= 0x7FF ) {
@@ -199,13 +199,13 @@ bool Lexer::appendn(size_t length) {
         this->push_error("Escape sequence exceeds unicode range (0x10FFFF)");
         return false;
     }
-    
+
     return true;
 }
 
 Token* Lexer::token_new() {
     Token* tok = new Token(this->fileName, this->line, this->line_pos);
-    
+
     return tok;
 }
 
@@ -216,16 +216,16 @@ void Lexer::lexer_newline() {
 
 void Lexer::nested_comment() {
     size_t depth = 1;
-    
+
     while (depth > 0) {
-        
+
         if (this->len <= 1) {
             this->push_error("Nested comment doesn't terminate");
             this->ptr += this->len;
             this->len = 0;
             return;
         }
-        
+
         if (this->look() == '*')
         {
             this->step();
@@ -233,21 +233,21 @@ void Lexer::nested_comment() {
             {
                 depth--;
             }
-            
+
         }
         else if (this->look() == '/') {
             this->step();
-            
+
             if (this->look() == '*')
             {
                 depth++;
             }
-            
+
         }
         else if (this->look() == '\n') {
             this->lexer_newline();
         }
-        
+
         this->step();
     }
 }
@@ -260,7 +260,7 @@ void Lexer::line_comment() {
 
 Token* Lexer::lexer_slash() {
     this->step();
-    
+
     if ( this->len > 0) {
         if (this->look() == '*') {
             this->step();
@@ -272,18 +272,18 @@ Token* Lexer::lexer_slash() {
             return nullptr;
         }
     }
-    
+
     Token* t = this->token_new();
     t->id = TokenType::TK_DIVIDE;
-    
+
     return t;
 }
 
 Token* Lexer::lexer_string() {
-    
+
     this->step();
     assert(this->buffer.size() == 0);
-    
+
     while (true) {
         if (this->len == 0)
         {
@@ -305,64 +305,64 @@ Token* Lexer::lexer_string() {
                 this->string_terminate();
                 return nullptr;
             }
-            
+
             this->step();
             char c = this->look();
             this->step();
-            
+
             switch (c) {
                 case 'a':
                     this->append(0x07);
                     break;
-                    
+
                 case 'b':
                     this->append(0x08);
                     break;
-                    
+
                 case 'f':
                     this->append(0x0C);
                     break;
-                    
+
                 case 'n':
                     this->append(0x0A);
                     break;
-                    
+
                 case 'r':
                     this->append(0x0D);
                     break;
-                    
+
                 case 't':
                     this->append(0x09);
                     break;
-                    
+
                 case 'v':
                     this->append(0x0B);
                     break;
-                    
+
                 case '\"':
                     this->append(0x22);
                     break;
-                    
+
                 case '\\':
                     this->append(0x5C);
                     break;
-                    
+
                 case '0':
                     this->append(0x00);
                     break;
-                    
+
                 case 'x':
                     this->appendn(2);
                     break;
-                    
+
                 case 'u':
                     this->appendn(4);
                     break;
-                    
+
                 case 'U':
                     this->appendn(6);
                     break;
-                    
+
                 default:
                     this->push_error("Invalid escape sequence: " + std::to_string(c));
                     break;
@@ -380,15 +380,15 @@ Token* Lexer::real(size_t v) {
     int e = 0;
     bool error = false;
     char c;
-    
+
     if (this->look() == '.') {
         this->step();
         digits = 0;
     }
-    
+
     while (this->len > 0) {
         c = this->look();
-        
+
         if ((c >= '0') || (c == '9'))
         {
             d = (d * 10) + (c - '0');
@@ -410,41 +410,41 @@ Token* Lexer::real(size_t v) {
         } else {
             break;
         }
-        
+
         this->step();
     }
-    
+
     if (digits == 0) {
         this->push_error("Real number has no digits following '.'");
         error = true;
     }
-    
+
     if((this->len > 0) && ((this->look() == 'e') || (this->look() == 'E'))) {
         this->step();
         digits = 0;
-        
+
         if (this->len == 0) {
             this->push_error("Real number doesn't terminate");
             return nullptr;
         }
-        
+
         c = this->look();
         bool neg = false;
         int n = 0;
-        
+
         if ((c == '+') || (c == '-')) {
             this->step();
             neg = (c == '-');
-            
+
             if (this->len == 0) {
                 this->push_error("Real number doesn't terminate");
                 return nullptr;
             }
         }
-        
+
         while (this->len > 0) {
             c = this->look();
-            
+
             if ((c >= '0') && (c <= '9')) {
                 n = (n * 10) + (c - '0');
                 digits++;
@@ -458,10 +458,10 @@ Token* Lexer::real(size_t v) {
             } else {
                 break;
             }
-            
+
             this->step();
         }
-        
+
         if (neg)
         {
             e -= n;
@@ -470,15 +470,15 @@ Token* Lexer::real(size_t v) {
         {
             e += n;
         }
-        
+
         if (digits == 0) {
             this->push_error("Exponent has no digits");
             error = true;
         }
     }
-    
+
     if (error) {return nullptr;}
-    
+
     Token* t = this->token_new();
     t->id = TokenType::TK_FLOAT;
     t->flt = d * pow(10.0, e);
@@ -489,11 +489,11 @@ Token* Lexer::hexadecimal() {
     size_t v = 0;
     bool error = false;
     char c;
-    
+
     while(this->len > 0 )
     {
         c = this->look();
-        
+
         if((c >= '0') && (c <= '9'))
         {
             v = (v * 16) + (c - '0');
@@ -511,12 +511,12 @@ Token* Lexer::hexadecimal() {
         } else {
             break;
         }
-        
+
         this->step();
     }
-    
+
     if( error ) { return nullptr; }
-    
+
     Token* t = this->token_new();
     t->id = TokenType::TK_INT;
     t->integer = v;
@@ -524,15 +524,15 @@ Token* Lexer::hexadecimal() {
 }
 
 Token* Lexer::decimal() {
-    
+
     size_t v = 0;
     bool error = false;
     char c;
-    
+
     while(this->len > 0)
     {
         c = this->look();
-        
+
         if( (c >= '0') && (c <= '9') )
         {
             v = (v * 10) + (c - '0');
@@ -549,12 +549,12 @@ Token* Lexer::decimal() {
         } else {
             break;
         }
-        
+
         this->step();
     }
-    
+
     if( error ) { return nullptr; }
-    
+
     Token* t = this->token_new();
     t->id = TokenType::TK_INT;
     t->integer = v;
@@ -562,15 +562,15 @@ Token* Lexer::decimal() {
 }
 
 Token* Lexer::binary() {
-    
+
     size_t v = 0;
     bool error = false;
     char c;
-    
+
     while( this->len > 0 )
     {
         c = this->look();
-        
+
         if( (c >= '0') && (c <= '1') )
         {
             v = (v * 2) + (c - '0');
@@ -585,12 +585,12 @@ Token* Lexer::binary() {
         } else {
             break;
         }
-        
+
         this->step();
     }
-    
+
     if( error ) { return nullptr; }
-    
+
     Token* t = this->token_new();
     t->id = TokenType::TK_INT;
     t->integer = v;
@@ -598,15 +598,15 @@ Token* Lexer::binary() {
 }
 
 Token* Lexer::number() {
-    
+
     if( this->look() == '0' )
     {
         this->step();
-        
+
         if( this->len > 0 )
         {
             char c = this->look();
-            
+
             switch( c )
             {
                 case 'x': return this->hexadecimal();
@@ -620,11 +620,11 @@ Token* Lexer::number() {
 
 void Lexer::read_id() {
     char c;
-    
+
     while( this->len > 0 )
     {
         c = this->look();
-        
+
         if((c == '_') || isalnum( c ))
         {
             this->append(c);
@@ -636,11 +636,11 @@ void Lexer::read_id() {
 }
 
 Token* Lexer::identifier() {
-    
+
     Token* t = this->token_new();
-    
+
     this->read_id();
-    
+
     for ( auto p : keywords) {
         if (!this->buffer.compare(p.symbol)) {
             t->id = p.id;
@@ -648,7 +648,7 @@ Token* Lexer::identifier() {
             return t;
         }
     }
-    
+
     t->id = TokenType::TK_ID;
     t->string = this->buff_copy();
     return t;
@@ -656,25 +656,25 @@ Token* Lexer::identifier() {
 
 Token* Lexer::type_id() {
     this->read_id();
-    
+
     Token* t = this->token_new();
     t->id = TokenType::TK_TYPEID;
     t->string = this->buff_copy();
-    
+
     return t;
 }
 
 Token* Lexer::symbol() {
-    
+
     Token* t;
     char sym[2];
-    
+
     sym[0] = this->look();
     this->step();
-    
+
     if( this->len > 1 ) {
         sym[1] = this->look();
-        
+
         if(isSymbol(sym[1]))
         {
             for( auto p : symbols2)
@@ -689,7 +689,7 @@ Token* Lexer::symbol() {
             }
         }
     }
-    
+
     for( auto p : symbols1)
     {
         if( sym[0] == p.symbol[0])
@@ -699,39 +699,39 @@ Token* Lexer::symbol() {
             return t;
         }
     }
-    
+
     this->push_error("Unknown symbol: " + std::to_string(sym[0]));
     return nullptr;
 }
 
 Token* Lexer::next() {
     Token* t = nullptr;
-    
+
     while((t == nullptr) && (this->len > 0))
     {
         char c = this->look();
-        
+
         switch( c )
         {
         case '\n':
             this->lexer_newline();
             this->step();
             break;
-            
+
         case '\r':
         case '\t':
         case ' ':
             this->step();
             break;
-            
+
         case '/':
                 t = this->lexer_slash();
             break;
-            
+
         case '\"':
             t = this->lexer_string();
             break;
-            
+
         default:
             if( isdigit( c ) )
             {
@@ -756,13 +756,13 @@ Token* Lexer::next() {
             }
         }
     }
-    
+
     if(t == nullptr) {
-        
+
         t = this->token_new();
         t->id = TokenType::TK_EOF;
     }
-    
+
     return t;
 }
 
