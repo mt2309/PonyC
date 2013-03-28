@@ -41,7 +41,7 @@ public:
         this->lexer = new Lexer(_file_name,file,this->error_list);
     }
 
-    std::vector<error_t> error_list;
+    std::vector<Error> error_list;
 
     AST* parse();
     void push_error(std::string err);

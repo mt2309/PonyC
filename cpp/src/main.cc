@@ -1,6 +1,7 @@
-#include <iostream>
-#include <fstream>
+// Copyright 2013 <Michael Thorpe>
+
 #include <tuple>
+#include <iostream>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
@@ -22,57 +23,57 @@
 
 namespace po = boost::program_options;
 
-using namespace std;
-
-
 int main(int argc, char** argv) {
-    string stages =
-    R"(Stage 1: parser
-    Stage 2: typer
-    Stage 3: code-gen)";
+    std::string stages = std::string("(Stage 1: parser\n")
+                       + "Stage 2: typer\n"
+                       + "Stage 3: code-gen\n)";
 
     po::options_description options("Allowed Options");
     options.add_options()
         ("help", "print usage message")
         ("version", "Version")
-        ("stage", po::value<int>(), (string("what stage of the compiler to run to (mostly used for debugging)\n") + stages).c_str())
-        ("input", po::value< vector<string>>(), "List of files/directories to compile")
-        ("output", po::value<string>(), "Output file");
+        ("stage", po::value<int>(),
+         (std::string("what stage of the compiler to run ")
+                      + "to (mostly used for debugging)\n" + stages).c_str())
+        ("input", po::value< std::vector<std::string>>(),
+                "List of files/directories to compile")
+        ("output", po::value<std::string>(), "Output file");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, options), vm);
     po::notify(vm);
 
     if (vm.count("help")) {
-        cout << options << endl;
+        std::cout << options << std::endl;
         exit(EXIT_SUCCESS);
     }
-    
+
     if (vm.count("version")) {
-        cout << "1.0.0 - C++ barebones" << endl;
+        std::cout << "1.0.0 - C++ barebones" << std::endl;
         exit(EXIT_SUCCESS);
     }
-    
+
     if (!vm.count("input")) {
-        cerr << "Error: no input file specified" << endl;
+        std::cerr << "Error: no input file specified" << std::endl;
         exit(EXIT_FAILURE);
     }
-    
+
     int stage = INT_MAX;
-    
+
     if (vm.count("stage"))
         stage = vm["stage"].as<int>();
-    
+
     // Discussion needed on multi-file compilation
-    string input = vm["input"].as<vector<string>>().front();
-    
+    std::string input = vm["input"].as<std::vector<std::string>>().front();
+
     auto unit = Loader::Load(input, stage);
-    
+
     if (unit == nullptr) {
-        cerr << "Starting directory: " << input << " was not found!" << endl;
+        std::cerr << "Starting directory: "
+                  << input << " was not found!" << std::endl;
     }
-    
+
     unit->buildUnit();
-    
+
     return EXIT_SUCCESS;
 }

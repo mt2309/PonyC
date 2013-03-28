@@ -1,4 +1,4 @@
-add_executable(ponyC Error.cc Parser.cc Lexer.cc Main.cc TypeChecker.cc CompilationUnit.cc Loader.cc)
+add_executable(ponyC Parser.cc Lexer.cc Main.cc TypeChecker.cc CompilationUnit.cc Loader.cc)
 
 FIND_PACKAGE(Boost COMPONENTS program_options filesystem system REQUIRED)
 INCLUDE_DIRECTORIES(${INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRS})

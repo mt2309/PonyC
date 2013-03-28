@@ -11,13 +11,14 @@
 
 #include <string>
 
-typedef struct error_t {
+struct Error {
     std::string prog_name;
     size_t line;
     size_t line_pos;
     std::string message;
-} error_t;
-
-const error_t* error_new(std::string, size_t, size_t, std::string);
+    
+    Error(std::string n, size_t l, size_t pos, std::string str) :
+    prog_name(n), line(l), line_pos(pos), message(str) {}
+};
 
 #endif

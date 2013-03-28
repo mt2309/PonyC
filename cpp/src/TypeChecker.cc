@@ -266,7 +266,7 @@ void TypeChecker::checkMixins() {
             // For every mixin check its existence
             for (auto mixin : top->mixins) {
                 if (!this->checkMixin(mixin, fullAST)) {
-                    this->errorList.push_back(*error_new(fullAST->ast->t->fileName, top->ast->t->line, top->ast->t->linePos,
+                    this->errorList.push_back(Error(fullAST->ast->t->fileName, top->ast->t->line, top->ast->t->linePos,
                                                         ("Mixin " +  mixin + " not found in current path")));
                 }
             }
@@ -284,7 +284,7 @@ void TypeChecker::checkNameClashes() {
                 typeNames.insert(name);
             }
             else {
-                this->errorList.push_back(*error_new(type->ast->t->fileName, type->ast->t->line, type->ast->t->linePos,
+                this->errorList.push_back(Error(type->ast->t->fileName, type->ast->t->line, type->ast->t->linePos,
                                                      "Name clash " + name + " found multiple times in the current module"));
             }
         }

@@ -37,10 +37,10 @@ private:
 
     std::string buffer;
 
-    std::vector<error_t> error_list;
+    std::vector<Error> error_list;
 
 public:
-    Lexer(std::string,std::string,std::vector<error_t>);
+    Lexer(std::string,std::string,std::vector<Error>);
 
     Token* next();
     void adv(size_t);

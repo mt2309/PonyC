@@ -43,7 +43,7 @@ AST* Parser::ast_expect(TokenType id) {
 }
 
 void Parser::push_error(std::string err) {
-    this->error_list.push_back(*error_new(this->t->fileName, this->t->line, this->t->linePos, err));
+    this->error_list.push_back(Error(this->t->fileName, this->t->line, this->t->linePos, err));
 }
 
 bool Parser::accept(TokenType id, AST* ast , size_t slot) {
@@ -836,7 +836,7 @@ AST* Parser::parse() {
 
     if (this->error_list.size() != 0) {
         std::cout << "Parse errors detected:" << std::endl;
-        for(error_t err : this->error_list) {
+        for(auto err : this->error_list) {
             std::cout << "Error at " << err.line << ":" << err.line_pos << ":" << err.message << std::endl;
         }
     }

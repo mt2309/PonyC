@@ -90,7 +90,7 @@ class TypeChecker {
     const CompilationUnit* unit;
     std::vector<AST*> astList;
     std::set<FullAST*> fullASTList;
-    std::vector<const error_t> errorList;
+    std::vector<const Error> errorList;
     std::set<std::string> typeNames;
 
 public:
