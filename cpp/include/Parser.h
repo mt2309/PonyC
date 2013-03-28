@@ -1,3 +1,4 @@
+// Copyright 2013 <Michael Thorpe>
 //
 //  parser.hpp
 //  ponyC
@@ -6,8 +7,8 @@
 //
 //
 
-#ifndef ponyC_parser_hpp
-#define ponyC_parser_hpp
+#ifndef CPP_INCLUDE_PARSER_H_
+#define CPP_INCLUDE_PARSER_H_
 
 #include <string>
 #include <vector>
@@ -20,39 +21,39 @@ typedef class Parser Parser;
 
 typedef AST* (Parser::*rule_t)();
 
-typedef struct alt_t{
+typedef struct alt_t {
     TokenType id;
     rule_t f;
 } alt_t;
 
 
 class Parser {
+    public:
+        std::vector<Error> error_list;
 
-private:
-    Lexer::Lexer* lexer;
-    Token* t;
-    AST* m_ast;
-    std::string program_text;
-    std::string file_name;
+    private:
+        Token* t;
+        AST* m_ast;
+        std::string program_text;
+        std::string file_name;
+        Lexer lexer;
 
-public:
 
-    Parser(std::string _file_name, std::string file) : program_text(file), file_name(_file_name), error_list() {
-        this->lexer = new Lexer(_file_name,file,this->error_list);
-    }
+    public:
+        Parser(std::string _file_name, std::string file) : error_list(),
+            program_text(file), file_name(_file_name),
+            lexer(_file_name,file,error_list) {}
 
-    std::vector<Error> error_list;
+        AST* parse();
+        void push_error(std::string err);
 
-    AST* parse();
-    void push_error(std::string err);
-
-    TokenType current();
-    bool accept(TokenType, AST*,size_t);
-    bool expect(TokenType, AST*,size_t);
-    void rule(rule_t,AST*,size_t);
-    void rulelist(rule_t,TokenType,AST*,size_t);
-    AST* tokenrule();
-    AST* mode();
+        TokenType current();
+        bool accept(TokenType, AST*,size_t);
+        bool expect(TokenType, AST*,size_t);
+        void rule(rule_t,AST*,size_t);
+        void rulelist(rule_t,TokenType,AST*,size_t);
+        AST* tokenrule();
+        AST* mode();
 
 private:
 
@@ -109,4 +110,4 @@ private:
     AST* mode_receiver();
 };
 
-#endif
+#endif  // CPP_INCLUDE_PARSER_H_

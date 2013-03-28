@@ -26,7 +26,7 @@ AST* Parser::ast_new(TokenType id) {
 
 AST* Parser::ast_token() {
     AST* a = new AST(nullptr,this->t);
-    this->t = this->lexer->next();
+    this->t = this->lexer.next();
     return a;
 }
 
@@ -56,7 +56,7 @@ bool Parser::accept(TokenType id, AST* ast , size_t slot) {
         ast->children.at(slot) = child;
     } else {
         delete this->t;
-        this->t = this->lexer->next();
+        this->t = this->lexer.next();
     }
 
     return true;
@@ -830,7 +830,7 @@ AST* Parser::module() {
 
 AST* Parser::parse() {
 
-    this->t = this->lexer->next();
+    this->t = this->lexer.next();
 
     this->m_ast = this->module();
 
