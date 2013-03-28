@@ -33,7 +33,6 @@ static std::string read_file(fs::path path) {
 }
 
 static void recurse_dir(fs::path p, std::vector<std::tuple<program_name,std::string>>* vec) {
-
     if (!fs::exists(p)) {
         std::cout << "Directory " << p.root_path() << " not found" << std::endl;
         exit(EXIT_FAILURE);
@@ -68,17 +67,16 @@ void CompilationUnit::buildUnit() {
 
     for(auto & prog : *programText) {
 
-        Parser* p = new Parser(std::get<0>(prog),std::get<1>(prog));
+        Parser p = Parser(std::get<0>(prog),std::get<1>(prog));
         AST* ast;
         std::cout << "Parsing file: " << std::get<0>(prog) << std::endl;
-        ast = p->parse();
-        if (p->error_list.size() > 0) {
+        ast = p.parse();
+        if (p.error_list.size() > 0) {
             std::cout << "Errors detected, continuing parsing remainder" << std::endl;
             continue;
         }
-
+        
         astList.push_back(ast);
-        delete p;
     }
 
     if (stage == 1)
