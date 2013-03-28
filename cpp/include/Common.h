@@ -154,7 +154,7 @@ struct Token {
 };
 
 typedef struct Type Type;
-typedef class ClassContents ClassContents;
+typedef struct ClassContents ClassContents;
 
 struct AST {
     Token* t;
@@ -181,7 +181,6 @@ struct Type {
 
 
 // forward declare CompilationUnit
-
 typedef class CompilationUnit CompilationUnit;
 
 struct FullAST {

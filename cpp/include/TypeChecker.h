@@ -1,3 +1,4 @@
+// Copyright 2013 <Michael Thorpe>
 //
 //  type_checker.h
 //  ponyC
@@ -6,11 +7,12 @@
 //
 //
 
-#ifndef __ponyC__type_checker__
-#define __ponyC__type_checker__
+#ifndef CPP_INCLUDE_TYPECHECKER_H_
+#define CPP_INCLUDE_TYPECHECKER_H_
 
 #include <vector>
 #include <set>
+#include <string>
 #include "CompilationUnit.h"
 #include "Common.h"
 #include "Error.h"
@@ -24,46 +26,34 @@ enum class Content {
     CN_MESSAGE
 };
 
-class Variable {
-
-public:
+struct Variable {
     std::string name;
     std::vector<std::string> type;
     Variable(std::string n, std::vector<std::string> t) : name(n), type(t) {}
 };
 
-class Delegate {
-public:
+struct Delegate {
     std::string ID;
-
 };
 
-class C_New {
-public:
-
+struct C_New {
 };
 
-class Ambient {
-public:
-
+struct Ambient {
 };
 
-class Function {
-public:
+struct Function {
     std::vector<Variable*> arguments;
     std::vector<Variable*> outputs;
 
-    Function(std::vector<Variable*> a, std::vector<Variable*> o) : arguments(a), outputs(o) {}
+    Function(std::vector<Variable*> a, std::vector<Variable*> o) :
+        arguments(a), outputs(o) {}
 };
 
-class Message {
-public:
-
+struct Message {
 };
 
-class ClassContents {
-
-public:
+struct ClassContents {
     AST* ast;
     Content type;
 
@@ -77,35 +67,46 @@ public:
         Message* message;
     };
 
-    ClassContents(AST* a, Variable* v)  : ast(a), type(Content::CN_VAR), variable(v) {}
-    ClassContents(AST* a, Delegate* d)  : ast(a), type(Content::CN_DELEGATE), delegate(d) {}
-    ClassContents(AST* a, C_New* c)     : ast(a), type(Content::CN_NEW), c_new(c) {}
-    ClassContents(AST* a, Ambient* am)  : ast(a), type(Content::CN_AMBIENT), ambient(am) {}
-    ClassContents(AST* a, Function* f)  : ast(a), type(Content::CN_FUNCTION), function(f) {}
-    ClassContents(AST* a, Message* m)   : ast(a), type(Content::CN_MESSAGE), message(m) {}
+    ClassContents(AST* a, Variable* v)  :
+        ast(a), type(Content::CN_VAR), variable(v) {}
 
+    ClassContents(AST* a, Delegate* d)  :
+        ast(a), type(Content::CN_DELEGATE), delegate(d) {}
+
+    ClassContents(AST* a, C_New* c)     :
+        ast(a), type(Content::CN_NEW), c_new(c) {}
+
+    ClassContents(AST* a, Ambient* am)  :
+        ast(a), type(Content::CN_AMBIENT), ambient(am) {}
+
+    ClassContents(AST* a, Function* f)  :
+        ast(a), type(Content::CN_FUNCTION), function(f) {}
+
+    ClassContents(AST* a, Message* m)   :
+        ast(a), type(Content::CN_MESSAGE), message(m) {}
 };
 
 class TypeChecker {
-    const CompilationUnit* unit;
-    std::vector<AST*> astList;
-    std::set<FullAST*> fullASTList;
-    std::vector<const Error> errorList;
-    std::set<std::string> typeNames;
+    private:
+        const CompilationUnit* unit;
+        std::vector<AST*> astList;
+        std::set<FullAST*> fullASTList;
+        std::vector<const Error> errorList;
+        std::set<std::string> typeNames;
 
-public:
-    TypeChecker(CompilationUnit* _unit) : unit(_unit), astList(_unit->astList), errorList(), typeNames() {}
+    public:
+        explicit TypeChecker(CompilationUnit* _unit) :
+            unit(_unit), astList(_unit->astList), errorList(), typeNames() {}
+        void typeCheck();
 
-    void typeCheck();
-
-private:
-    // First pass
-    void topLevelTypes();
-    void checkMixins();
-    void recurseSingleTopAST(AST* ast, std::set<Type*> &typeList, std::set<CompilationUnit*> &imports);
-    bool checkMixin(std::string mixin, FullAST* ast);
-    void checkNameClashes();
-    Type* newType(AST* ast, Kind k, std::set<ClassContents*> contents);
+    private:
+        void topLevelTypes();
+        void checkMixins();
+        void recurseSingleTopAST(AST* ast, std::set<Type*> &typeList,
+                                 std::set<CompilationUnit*> &imports);
+        bool checkMixin(std::string mixin, FullAST* ast);
+        void checkNameClashes();
+        Type* newType(AST* ast, Kind k, std::set<ClassContents*> contents);
 };
 
-#endif /* defined(__ponyC__type_checker__) */
+#endif  // CPP_INCLUDE_TYPECHECKER_H_
