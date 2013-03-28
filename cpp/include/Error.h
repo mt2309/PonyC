@@ -1,3 +1,4 @@
+// Copyright 2013 <Michael Thorpe>
 //
 //  error.hpp
 //  ponyC
@@ -6,8 +7,8 @@
 //
 //
 
-#ifndef ponyC_error_hpp
-#define ponyC_error_hpp
+#ifndef CPP_INCLUDE_ERROR_H_
+#define CPP_INCLUDE_ERROR_H_
 
 #include <string>
 
@@ -16,9 +17,9 @@ struct Error {
     size_t line;
     size_t line_pos;
     std::string message;
-    
+
     Error(std::string n, size_t l, size_t pos, std::string str) :
     prog_name(n), line(l), line_pos(pos), message(str) {}
 };
 
-#endif
+#endif  // CPP_INCLUDE_ERROR_H_
