@@ -1,3 +1,4 @@
+// Copyright 2013 <Michael Thorpe>
 //
 //  type_checker.cpp
 //  ponyC
@@ -6,12 +7,13 @@
 //
 //
 
-#include "typeChecker.h"
-#include "Loader.h"
-#include <iostream>
-#include <stdlib.h>
+#include "TypeChecker.h"
+
 #include <assert.h>
+#include <iostream>
 #include <set>
+
+#include "Loader.h"
 
 #define debug(x)    (std::cout << x << std::endl)
 
@@ -22,7 +24,7 @@ static std::string extractName(AST* ast) {
 
     std::string res;
 
-    for (auto children: ast->children) {
+    for (auto children : ast->children) {
         if (children == nullptr)
             continue;
         res = extractName(children);
@@ -35,33 +37,31 @@ static std::string extractName(AST* ast) {
 }
 
 static void extractMixins(AST* ast, std::vector<std::string> &mixins) {
-    assert(   ast->t->id == TokenType::TK_OBJECT
+    assert(ast->t->id == TokenType::TK_OBJECT
            || ast->t->id == TokenType::TK_TRAIT
            || ast->t->id == TokenType::TK_ACTOR
            || ast->t->id == TokenType::TK_DECLARE);
 
     // Why 2, because why not
     if (ast->children.at(2) != nullptr) {
-        for (auto child: ast->children.at(2)->children) {
+        for (auto child : ast->children.at(2)->children) {
             if (child != nullptr) {
                 // Heh, hacky
                 mixins.push_back(child->children.at(0)->t->string);
             }
         }
     }
-
 }
 
-Type* TypeChecker::newType(AST* ast, Kind k, std::set<ClassContents*> contents) {
+Type* TypeChecker::newType(AST* a, Kind k, std::set<ClassContents*> contents) {
     auto mixins = std::vector<std::string>();
-    auto name = extractName(ast);
+    auto name = extractName(a);
 
-    extractMixins(ast, mixins);
-    return new Type(extractName(ast),k,ast,mixins,contents);
+    extractMixins(a, mixins);
+    return new Type(name, k, a, mixins, contents);
 }
 
 static std::string getType(AST* ast) {
-
     if (ast == nullptr) {
         debug("null pointer passed to getType");
         return "";
@@ -136,7 +136,10 @@ static ClassContents* newAmbientContents(AST* ast) {
 static ClassContents* newFunctionContent(AST* ast) {
     auto inputs = std::vector<Variable*>();
     auto outputs = std::vector<Variable*>();
-    getArgsList(ast->children.at(3), inputs); getArgsList(ast->children.at(4), outputs);
+
+    getArgsList(ast->children.at(3), inputs);
+    getArgsList(ast->children.at(4), outputs);
+
     Function* f = new Function(inputs, outputs);
     ClassContents* c = new ClassContents(ast, f);
     return c;
@@ -188,26 +191,32 @@ static std::set<ClassContents*> collectFunctions(AST* ast) {
     return contents;
 }
 
-void TypeChecker::recurseSingleTopAST(AST* ast,
-                                std::set<Type*> &typeList,
-                                std::set<CompilationUnit*> &imports) {
-
+void TypeChecker::recurseSingleTopAST(AST* ast, std::set<Type*> &typeList,
+                                      std::set<CompilationUnit*> &imports) {
     if (ast == nullptr)
         return;
 
     switch (ast->t->id) {
         case TokenType::TK_OBJECT:
-            typeList.insert(newType(ast, Kind::TYPE_OBJECT,collectFunctions(ast->children.at(3)->children.at(0))));
+            typeList.insert(newType(ast,
+                                    Kind::TYPE_OBJECT,
+                                    collectFunctions(ast->children.at(3)->children.at(0))));
             break;
         case TokenType::TK_TRAIT:
-            typeList.insert(newType(ast, Kind::TYPE_TRAIT,collectFunctions(ast->children.at(3)->children.at(0))));
+            typeList.insert(newType(ast,
+                                    Kind::TYPE_TRAIT,
+                                    collectFunctions(ast->children.at(3)->children.at(0))));
             break;
         case TokenType::TK_ACTOR:
-            typeList.insert(newType(ast, Kind::TYPE_ACTOR,collectFunctions(ast->children.at(3)->children.at(0))));
+            typeList.insert(newType(ast,
+                                    Kind::TYPE_ACTOR,
+                                    collectFunctions(ast->children.at(3)->children.at(0))));
             break;
         case TokenType::TK_DECLARE:
             // Are declarations types? (yes - mappings from one type to another)
-            typeList.insert(newType(ast, Kind::TYPE_DECLARE,collectFunctions(ast)));
+            typeList.insert(newType(ast,
+                                    Kind::TYPE_DECLARE,
+                                    collectFunctions(ast)));
             break;
         case TokenType::TK_USE:
         {
@@ -227,7 +236,7 @@ void TypeChecker::recurseSingleTopAST(AST* ast,
             return;
     }
 
-    for (auto children: ast->children) {
+    for (auto children : ast->children) {
         recurseSingleTopAST(children, typeList, imports);
     }
 
@@ -235,7 +244,6 @@ void TypeChecker::recurseSingleTopAST(AST* ast,
 }
 
 bool TypeChecker::checkMixin(std::string mixin, FullAST* ast) {
-
     // Look up type in AST List
     for (auto f : this->fullASTList) {
         for (auto type : f->topLevelDecls) {
@@ -255,19 +263,21 @@ bool TypeChecker::checkMixin(std::string mixin, FullAST* ast) {
             }
         }
     }
-
     return false;
 }
 
 void TypeChecker::checkMixins() {
     for (auto fullAST : this->fullASTList) {
         for (auto top : fullAST->topLevelDecls) {
-
             // For every mixin check its existence
             for (auto mixin : top->mixins) {
                 if (!this->checkMixin(mixin, fullAST)) {
-                    this->errorList.push_back(Error(fullAST->ast->t->fileName, top->ast->t->line, top->ast->t->linePos,
-                                                        ("Mixin " +  mixin + " not found in current path")));
+                    this->errorList.push_back(Error(fullAST->ast->t->fileName,
+                                                    top->ast->t->line,
+                                                    top->ast->t->linePos,
+                                                    ("Mixin " +
+                                                    mixin +
+                                                     " not found in scope")));
                 }
             }
         }
@@ -275,17 +285,21 @@ void TypeChecker::checkMixins() {
 }
 
 void TypeChecker::checkNameClashes() {
-
     for (auto ast : this->fullASTList) {
         for (auto type : ast->topLevelDecls) {
             auto name = type->name;
 
             if (typeNames.find(name) == typeNames.end()) {
                 typeNames.insert(name);
-            }
-            else {
-                this->errorList.push_back(Error(type->ast->t->fileName, type->ast->t->line, type->ast->t->linePos,
-                                                     "Name clash " + name + " found multiple times in the current module"));
+            } else {
+                this->errorList.push_back(
+                                Error(type->ast->t->fileName,
+                                      type->ast->t->line,
+                                      type->ast->t->linePos,
+                                    "Name clash " +
+                                      name +
+                                      " found multiple times " +
+                                      "in the current module"));
             }
         }
     }
@@ -295,8 +309,7 @@ void TypeChecker::topLevelTypes() {
     fullASTList = std::set<FullAST*>();
 
     // All compilation units
-    for (auto ast: this->astList) {
-
+    for (auto ast : this->astList) {
         std::cout << "Typechecking file: " << ast->t->fileName << std::endl;
 
         // Collections holding topLevel types
@@ -324,7 +337,9 @@ void TypeChecker::typeCheck() {
 
     // do more type detection here
 
-    for (auto error: this->errorList) {
-        std::cout << "Error at " << error.prog_name << "\t" << error.line << ":" << error.line_pos << "\t" << error.message << std::endl;
+    for (auto error : this->errorList) {
+        std::cout << "Error at " << error.prog_name << "\t"
+            << error.line << ":" << error.line_pos << "\t"
+            << error.message << std::endl;
     }
 }
