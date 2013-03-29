@@ -83,6 +83,6 @@ void CompilationUnit::buildUnit() {
         exit(EXIT_SUCCESS);
 
     //Type check!
-    auto typeChecker = new TypeChecker(this);
+    auto typeChecker = new TypeChecker(*this);
     typeChecker->typeCheck();
 }

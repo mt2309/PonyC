@@ -153,9 +153,6 @@ struct Token {
     ~Token() {}
 };
 
-typedef struct Type Type;
-typedef struct ClassContents ClassContents;
-
 struct AST {
     Token* t;
     AST* sibling;
@@ -163,33 +160,6 @@ struct AST {
     AST(AST* s, Token* _t) : t(_t), sibling(s) {
         children = std::vector<AST*>(AST_SLOTS);
     }
-};
-
-struct Type {
-    std::string name;
-
-    Kind kind;
-
-    AST* ast;
-    std::vector<std::string> mixins;
-    std::set<ClassContents*> contents;
-
-    Type(std::string n, Kind k, AST* a, std::vector<std::string> m,
-         std::set<ClassContents*> c) :  name(n), kind(k), ast(a),
-                                        mixins(m), contents(c) {}
-};
-
-
-// forward declare CompilationUnit
-typedef class CompilationUnit CompilationUnit;
-
-struct FullAST {
-    AST* ast;
-    std::set<CompilationUnit*> imports;
-    std::set<Type*> topLevelDecls;
-
-    FullAST(AST* a, std::set<CompilationUnit*> i,
-            std::set<Type*> t) : ast(a), imports(i), topLevelDecls(t) {}
 };
 
 #endif  // CPP_INCLUDE_COMMON_H_

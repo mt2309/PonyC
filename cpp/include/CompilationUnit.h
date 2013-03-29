@@ -7,15 +7,16 @@
 #include <string>
 
 #include "Common.h"
+#include "Typer.h"
 
 typedef std::string program_name;
 
 class CompilationUnit {
     private:
-        int stage;
+        const int stage;
 
     public:
-        std::vector<FullAST*> fullASTList;
+        std::vector<FullAST> fullASTList;
 
         const std::string directoryName;
 
@@ -25,5 +26,10 @@ class CompilationUnit {
         CompilationUnit(std::string name, int _stage):
             stage(_stage), directoryName(name) {}
 };
+
+inline bool operator<(const CompilationUnit& a, const CompilationUnit& b) {
+    return a.directoryName < b.directoryName;
+}
+
 
 #endif  // CPP_INCLUDE_COMPILATIONUNIT_H_
