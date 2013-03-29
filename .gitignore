@@ -10,6 +10,4 @@ cpp/src/CMakeScripts/*
 cpp/Makefile
 bin/
 ponyC.build/
-
-.DS_Store
-**/.DS_Store
+test/
