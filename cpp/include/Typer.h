@@ -21,9 +21,9 @@ typedef class CompilationUnit CompilationUnit;
 
 struct ClassContents {
     std::string name;
-    AST* ast;
+    const AST* ast;
     
-    ClassContents(std::string n, AST* a) : name(n), ast(a) {}
+    ClassContents(std::string n, const AST* a) : name(n), ast(a) {}
 };
 
 inline bool operator<(const ClassContents& a, const ClassContents& b) {
@@ -38,32 +38,32 @@ struct Parameter {
     
 struct Field : ClassContents {
     std::vector<std::string> type;
-    Field(std::string n, std::vector<std::string> t, AST* a) : ClassContents(n,a), type(t) {}
+    Field(std::string n, std::vector<std::string> t, const AST* a) : ClassContents(n,a), type(t) {}
 };
 
 struct Delegate : ClassContents {
     
-    Delegate(std::string n, AST* a) : ClassContents(n,a) {}
+    Delegate(std::string n, const AST* a) : ClassContents(n,a) {}
 };
 
 struct Constructor : ClassContents {
-    Constructor(std::string n, AST* a) : ClassContents(n,a) {}
+    Constructor(std::string n, const AST* a) : ClassContents(n,a) {}
 };
 
 struct Ambient : ClassContents {
-    Ambient(std::string n, AST* a) : ClassContents(n,a) {}
+    Ambient(std::string n, const AST* a) : ClassContents(n,a) {}
 };
 
 struct Function : ClassContents {
     std::vector<Parameter> arguments;
     std::vector<Parameter> outputs;
     
-    Function(std::vector<Parameter> args, std::vector<Parameter> o, std::string n, AST* a) :
+    Function(std::vector<Parameter> args, std::vector<Parameter> o, std::string n, const AST* a) :
     ClassContents(n,a), arguments(args), outputs(o) {}
 };
 
 struct Message : ClassContents {
-    Message(std::string n, AST* a) : ClassContents(n,a) {}
+    Message(std::string n, const AST* a) : ClassContents(n,a) {}
 };
 
 

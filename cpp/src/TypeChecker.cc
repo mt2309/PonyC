@@ -118,15 +118,14 @@ static ClassContents* newVarContent(AST* ast) {
     return v;
 }
 
-static ClassContents* newFunctionContent(AST* ast) {
+static ClassContents* newFunctionContent(const AST* ast) {
     auto inputs = std::vector<Parameter>();
     auto outputs = std::vector<Parameter>();
 
     getArgsList(ast->children.at(3), inputs);
     getArgsList(ast->children.at(4), outputs);
-
-    Function* f = new Function(inputs, outputs, ast->children.at(0)->t->string, ast);
-    return f;
+        
+    return new Function(inputs, outputs, ast->children.at(1)->t->string, ast);
 }
 
 static std::set<ClassContents>* collectFunctions(AST* ast) {
