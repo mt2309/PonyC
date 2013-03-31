@@ -18,6 +18,13 @@
 
 typedef class CompilationUnit CompilationUnit;
 
+enum class Mode {
+    READONLY,
+    MUTABLE,
+    IMMUTABLE,
+    UNIQUE
+};
+
 
 struct ClassContents {
     std::string name;
@@ -55,10 +62,11 @@ struct Ambient : ClassContents {
 };
 
 struct Function : ClassContents {
+    Mode mode;
     std::vector<Parameter> arguments;
     std::vector<Parameter> outputs;
     
-    Function(std::vector<Parameter> args, std::vector<Parameter> o, std::string n, const AST* a) :
+    Function(Mode m, std::vector<Parameter> args, std::vector<Parameter> o, std::string n, const AST* a) :
     ClassContents(n,a), arguments(args), outputs(o) {}
 };
 
@@ -72,11 +80,11 @@ struct Type {
     
     Kind kind;
     
-    AST* ast;
+    const AST* const ast;
     std::vector<std::string> mixins;
     std::set<ClassContents> contents;
     
-    Type(std::string n, Kind k, AST* a, std::vector<std::string> m,
+    Type(std::string n, Kind k, const AST* a, std::vector<std::string> m,
          std::set<ClassContents> c) :  name(n), kind(k), ast(a),
     mixins(m), contents(c) {}
     

@@ -131,7 +131,7 @@ enum class Kind {
 
 struct Token {
     public:
-    std::string fileName;
+    const std::string fileName;
     size_t line;
     size_t linePos;
 

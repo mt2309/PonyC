@@ -18,7 +18,7 @@
 
 #define debug(x)    (std::cout << x << std::endl)
 
-static std::string extractName(AST* ast) {
+static std::string extractName(AST* const ast) {
     if (ast->t->id == TokenType::TK_TYPEID) {
         return ast->t->string;
     }
@@ -37,7 +37,7 @@ static std::string extractName(AST* ast) {
     return "";
 }
 
-static void extractMixins(AST* ast, std::vector<std::string> &mixins) {
+static void extractMixins(AST* const ast, std::vector<std::string> &mixins) {
     assert(ast->t->id == TokenType::TK_OBJECT
            || ast->t->id == TokenType::TK_TRAIT
            || ast->t->id == TokenType::TK_ACTOR
@@ -54,15 +54,37 @@ static void extractMixins(AST* ast, std::vector<std::string> &mixins) {
     }
 }
 
-Type* TypeChecker::newType(AST* a, Kind k, std::set<ClassContents> contents) {
+Type* TypeChecker::newType(AST* const ast, Kind k, std::set<ClassContents> contents) {
     auto mixins = std::vector<std::string>();
-    auto name = extractName(a);
+    auto name = extractName(ast);
 
-    extractMixins(a, mixins);
-    return new Type(name, k, a, mixins, contents);
+    extractMixins(ast, mixins);
+    return new Type(name, k, ast, mixins, contents);
 }
 
-static std::string getType(AST* ast) {
+Mode TypeChecker::getMode(AST* const ast) {
+    // since we treat emptiness as readonly:
+    
+    if (ast == nullptr) return Mode::READONLY;
+    else {
+        switch (ast->t->id) {
+            case TokenType::TK_BANG:
+                return Mode::IMMUTABLE;
+            case TokenType::TK_UNIQ:
+                return Mode::UNIQUE;
+            case TokenType::TK_MUT:
+                return Mode::MUTABLE;
+            case TokenType::TK_MODE:
+                return Mode::READONLY;
+                
+            default:
+                this->errorList.push_back(Error(ast->t->fileName, ast->t->line, ast->t->linePos, "Mode is broken"));
+                return Mode::READONLY;
+        }
+    }
+}
+
+static std::string getType(AST* const ast) {
     if (ast == nullptr) {
         debug("null pointer passed to getType");
         return "";
@@ -83,7 +105,7 @@ static std::string getType(AST* ast) {
     return "";
 }
 
-static void getTypeList(AST* ast, std::vector<std::string> &types) {
+void TypeChecker::getTypeList(AST* const ast, std::vector<std::string> &types) {
     AST* current = ast;
 
     while (current != nullptr) {
@@ -93,7 +115,7 @@ static void getTypeList(AST* ast, std::vector<std::string> &types) {
     }
 }
 
-static void getArgsList(AST* ast, std::vector<Parameter> &types) {
+void TypeChecker::getArgsList(AST* const ast, std::vector<Parameter> &types) {
     AST* current = ast;
 
     while (current != nullptr) {
@@ -111,25 +133,25 @@ static void getArgsList(AST* ast, std::vector<Parameter> &types) {
     }
 }
 
-static ClassContents* newVarContent(AST* ast) {
+ClassContents* TypeChecker::newVarContent(AST* const ast) {
     auto type = std::vector<std::string>();
     getTypeList(ast, type);
     Field* v = new Field(ast->children.at(0)->t->string, type, ast);
     return v;
 }
 
-static ClassContents* newFunctionContent(const AST* ast) {
+ClassContents* TypeChecker::newFunctionContent(AST* const ast) {
     auto inputs = std::vector<Parameter>();
     auto outputs = std::vector<Parameter>();
 
     getArgsList(ast->children.at(3), inputs);
     getArgsList(ast->children.at(4), outputs);
-        
-    return new Function(inputs, outputs, ast->children.at(1)->t->string, ast);
+    
+    return new Function(getMode(ast->children.at(0)), inputs, outputs, ast->children.at(1)->t->string, ast);
 }
 
-static std::set<ClassContents>* collectFunctions(AST* ast) {
-    auto contents = new std::set<ClassContents>();
+std::set<ClassContents> TypeChecker::collectFunctions(AST* const ast) {
+    auto contents = std::set<ClassContents>();
 
     AST* node = ast;
 
@@ -137,27 +159,27 @@ static std::set<ClassContents>* collectFunctions(AST* ast) {
         switch (node->t->id) {
             case TokenType::TK_VAR:
                 debug("var declaration");
-                contents->insert(*newVarContent(node));
+                contents.insert(*newVarContent(node));
                 break;
             case TokenType::TK_DELEGATE:
                 debug("delegate");
-                contents->insert(Delegate(node->children.at(0)->t->string,node));
+                contents.insert(Delegate(node->children.at(0)->t->string,node));
                 break;
             case TokenType::TK_NEW:
                 debug("constructor");
-                contents->insert(Constructor(node->children.at(1)->t->string,node));
+                contents.insert(Constructor(node->children.at(1)->t->string,node));
                 break;
             case TokenType::TK_AMBIENT:
                 debug("ambient");
-                contents->insert(Ambient(node->children.at(0)->t->string,node));
+                contents.insert(Ambient(node->children.at(0)->t->string,node));
                 break;
             case TokenType::TK_FUNCTION:
                 debug("function");
-                contents->insert(*newFunctionContent(node));
+                contents.insert(*newFunctionContent(node));
                 break;
             case TokenType::TK_MESSAGE:
                 debug("message");
-                contents->insert(Message(node->children.at(0)->t->string,node));
+                contents.insert(Message(node->children.at(0)->t->string,node));
                 break;
             default:
                 break;
@@ -169,7 +191,7 @@ static std::set<ClassContents>* collectFunctions(AST* ast) {
     return contents;
 }
 
-void TypeChecker::recurseSingleTopAST(AST* ast, std::set<Type> &typeList,
+void TypeChecker::recurseSingleTopAST(AST* const ast, std::set<Type> &typeList,
                                       std::set<CompilationUnit> &imports) {
     if (ast == nullptr)
         return;
@@ -178,23 +200,23 @@ void TypeChecker::recurseSingleTopAST(AST* ast, std::set<Type> &typeList,
         case TokenType::TK_OBJECT:
             typeList.insert(*newType(ast,
                                     Kind::TYPE_OBJECT,
-                                    *collectFunctions(ast->children.at(3)->children.at(0))));
+                                    collectFunctions(ast->children.at(3)->children.at(0))));
             break;
         case TokenType::TK_TRAIT:
             typeList.insert(*newType(ast,
                                     Kind::TYPE_TRAIT,
-                                    *collectFunctions(ast->children.at(3)->children.at(0))));
+                                    collectFunctions(ast->children.at(3)->children.at(0))));
             break;
         case TokenType::TK_ACTOR:
             typeList.insert(*newType(ast,
                                     Kind::TYPE_ACTOR,
-                                    *collectFunctions(ast->children.at(3)->children.at(0))));
+                                    collectFunctions(ast->children.at(3)->children.at(0))));
             break;
         case TokenType::TK_DECLARE:
             // Are declarations types? (yes - mappings from one type to another)
             typeList.insert(*newType(ast,
                                     Kind::TYPE_DECLARE,
-                                    *collectFunctions(ast)));
+                                    collectFunctions(ast)));
             break;
         case TokenType::TK_USE:
         {
