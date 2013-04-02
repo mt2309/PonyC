@@ -130,10 +130,10 @@ enum class Kind {
 };
 
 struct Token {
-    public:
+public:
     const std::string fileName;
-    size_t line;
-    size_t linePos;
+    const size_t line;
+    const size_t linePos;
 
     union {
         std::string string;
@@ -154,12 +154,10 @@ struct Token {
 };
 
 struct AST {
-    Token* t;
+    Token* const t;
     AST* sibling;
     std::vector<AST*> children;
-    AST(AST* s, Token* _t) : t(_t), sibling(s) {
-        children = std::vector<AST*>(AST_SLOTS);
-    }
+    AST(AST* s, Token* _t) : t(_t), sibling(s), children(AST_SLOTS) {}
 };
 
 #endif  // CPP_INCLUDE_COMMON_H_

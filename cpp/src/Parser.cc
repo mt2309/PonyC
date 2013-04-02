@@ -50,7 +50,7 @@ AST* Parser::ast_expect(TokenType id) {
 }
 
 void Parser::push_error(std::string err) {
-    this->error_list.push_back(Error(this->t->fileName,
+    this->error_list->push_back(Error(this->t->fileName,
                                      this->t->line,
                                      this->t->linePos, err));
 }
@@ -822,9 +822,9 @@ AST* Parser::parse() {
 
     this->m_ast = this->module();
 
-    if (this->error_list.size() != 0) {
+    if (this->error_list->size() != 0) {
         std::cout << "Parse errors detected:" << std::endl;
-        for (auto err : this->error_list) {
+        for (auto err : *this->error_list) {
             std::cout << "Error at " <<
                 err.line << ":" << err.line_pos << ":" << err.message
                 << std::endl;

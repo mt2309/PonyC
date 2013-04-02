@@ -38,27 +38,28 @@ static std::string extractName(AST* const ast) {
 }
 
 static void extractMixins(AST* const ast, std::vector<std::string> &mixins) {
-    assert(ast->t->id == TokenType::TK_OBJECT
-           || ast->t->id == TokenType::TK_TRAIT
-           || ast->t->id == TokenType::TK_ACTOR
-           || ast->t->id == TokenType::TK_DECLARE);
-
-    // Why 2, because why not
-    if (ast->children.at(2) != nullptr) {
-        for (auto child : ast->children.at(2)->children) {
-            if (child != nullptr) {
-                // Heh, hacky
-                mixins.push_back(child->children.at(0)->t->string);
-            }
+    assert(ast->t->id == TokenType::TK_IS);
+    
+    if (ast != nullptr) {
+        AST* curr = ast->children.at(0);
+        while (curr != nullptr) {
+            // Heh, hacky
+            mixins.push_back(curr->children.at(0)->t->string);
+            curr = curr->sibling;
         }
     }
 }
 
 Type* TypeChecker::newType(AST* const ast, Kind k, std::set<ClassContents> contents) {
+    assert(ast->t->id == TokenType::TK_OBJECT
+           || ast->t->id == TokenType::TK_TRAIT
+           || ast->t->id == TokenType::TK_ACTOR
+           || ast->t->id == TokenType::TK_DECLARE);
+    
     auto mixins = std::vector<std::string>();
-    auto name = extractName(ast);
+    auto name = extractName(ast->children.at(0));
 
-    extractMixins(ast, mixins);
+    extractMixins(ast->children.at(2), mixins);
     return new Type(name, k, ast, mixins, contents);
 }
 
@@ -214,9 +215,7 @@ void TypeChecker::recurseSingleTopAST(AST* const ast, std::set<Type> &typeList,
             break;
         case TokenType::TK_DECLARE:
             // Are declarations types? (yes - mappings from one type to another)
-            typeList.insert(*newType(ast,
-                                    Kind::TYPE_DECLARE,
-                                    collectFunctions(ast)));
+            typeList.insert(Type(extractName(ast), Kind::TYPE_DECLARE, ast));
             break;
         case TokenType::TK_USE:
         {

@@ -88,6 +88,8 @@ struct Type {
          std::set<ClassContents> c) :  name(n), kind(k), ast(a),
     mixins(m), contents(c) {}
     
+    Type(std::string n, Kind k, const AST* a) : name(n), kind(k), ast(a) {}
+    
     Type(std::string n, Kind k) :   name(n), kind(k), ast(nullptr), mixins(),
     contents() {}
 };

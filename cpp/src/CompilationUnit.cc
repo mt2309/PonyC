@@ -71,7 +71,7 @@ void CompilationUnit::buildUnit() {
         AST* ast;
         std::cout << "Parsing file: " << std::get<0>(prog) << std::endl;
         ast = p.parse();
-        if (p.error_list.size() > 0) {
+        if (p.error_list->size() > 0) {
             std::cout << "Errors detected, continuing parsing remainder" << std::endl;
             continue;
         }

@@ -108,7 +108,7 @@ const std::vector<const symbol_t> Lexer::keywords = {
 };
 
 void Lexer::push_error(std::string err) {
-    this->error_list.push_back(Error(this->fileName, this->line, this->line_pos, err));
+    this->error_list->push_back(Error(this->fileName, this->line, this->line_pos, err));
 }
 
 static bool isSymbol(char c) {
@@ -766,7 +766,7 @@ Token* Lexer::next() {
     return t;
 }
 
-Lexer::Lexer(std::string _fileName, std::string input, std::vector<Error> list) {
+Lexer::Lexer(std::string _fileName, std::string input, std::vector<Error>* list) {
     this->fileName = _fileName;
     this->m = input;
     this->len = input.size();
