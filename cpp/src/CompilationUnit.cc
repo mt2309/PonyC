@@ -6,6 +6,7 @@
 
 #include "CompilationUnit.h"
 #include "TypeChecker.h"
+#include "TopTypeChecker.h"
 #include "Parser.h"
 
 #pragma GCC diagnostic push
@@ -84,5 +85,6 @@ void CompilationUnit::buildUnit() {
 
     //Type check!
     auto typeChecker = new TypeChecker(*this);
-    typeChecker->typeCheck();
+    auto top = new TopTypeChecker(typeChecker);
+    top->typeCheck();
 }

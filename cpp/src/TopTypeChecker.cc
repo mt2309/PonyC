@@ -7,7 +7,7 @@
 //
 //
 
-#include "TypeChecker.h"
+#include "TopTypeChecker.h"
 
 #include <assert.h>
 #include <iostream>
@@ -50,7 +50,7 @@ static void extractMixins(AST* const ast, std::vector<std::string> &mixins) {
     }
 }
 
-Type* TypeChecker::newType(AST* const ast, Kind k, std::set<ClassContents> contents) {
+Type* TopTypeChecker::newType(AST* const ast, Kind k, std::set<ClassContents> contents) {
     assert(ast->t->id == TokenType::TK_OBJECT
            || ast->t->id == TokenType::TK_TRAIT
            || ast->t->id == TokenType::TK_ACTOR
@@ -63,7 +63,7 @@ Type* TypeChecker::newType(AST* const ast, Kind k, std::set<ClassContents> conte
     return new Type(name, k, ast, mixins, contents);
 }
 
-Mode TypeChecker::getMode(AST* const ast) {
+Mode TopTypeChecker::getMode(AST* const ast) {
     // since we treat emptiness as readonly:
     
     if (ast == nullptr) return Mode::READONLY;
@@ -79,7 +79,7 @@ Mode TypeChecker::getMode(AST* const ast) {
                 return Mode::READONLY;
                 
             default:
-                this->errorList.push_back(Error(ast->t->fileName, ast->t->line, ast->t->linePos, "Mode is broken"));
+                this->tc->errorList.push_back(Error(ast->t->fileName, ast->t->line, ast->t->linePos, "Mode is broken"));
                 return Mode::READONLY;
         }
     }
@@ -106,7 +106,7 @@ static std::string getType(AST* const ast) {
     return "";
 }
 
-void TypeChecker::getTypeList(AST* const ast, std::vector<std::string> &types) {
+void TopTypeChecker::getTypeList(AST* const ast, std::vector<std::string> &types) {
     AST* current = ast;
 
     while (current != nullptr) {
@@ -116,7 +116,7 @@ void TypeChecker::getTypeList(AST* const ast, std::vector<std::string> &types) {
     }
 }
 
-void TypeChecker::getArgsList(AST* const ast, std::vector<Parameter> &types) {
+void TopTypeChecker::getArgsList(AST* const ast, std::vector<Parameter> &types) {
     AST* current = ast;
 
     while (current != nullptr) {
@@ -134,14 +134,14 @@ void TypeChecker::getArgsList(AST* const ast, std::vector<Parameter> &types) {
     }
 }
 
-ClassContents* TypeChecker::newVarContent(AST* const ast) {
+ClassContents* TopTypeChecker::newVarContent(AST* const ast) {
     auto type = std::vector<std::string>();
     getTypeList(ast, type);
     Field* v = new Field(ast->children.at(0)->t->string, type, ast);
     return v;
 }
 
-ClassContents* TypeChecker::newFunctionContent(AST* const ast) {
+ClassContents* TopTypeChecker::newFunctionContent(AST* const ast) {
     auto inputs = std::vector<Parameter>();
     auto outputs = std::vector<Parameter>();
 
@@ -151,7 +151,7 @@ ClassContents* TypeChecker::newFunctionContent(AST* const ast) {
     return new Function(getMode(ast->children.at(0)), inputs, outputs, ast->children.at(1)->t->string, ast);
 }
 
-std::set<ClassContents> TypeChecker::collectFunctions(AST* const ast) {
+std::set<ClassContents> TopTypeChecker::collectFunctions(AST* const ast) {
     auto contents = std::set<ClassContents>();
 
     AST* node = ast;
@@ -192,7 +192,7 @@ std::set<ClassContents> TypeChecker::collectFunctions(AST* const ast) {
     return contents;
 }
 
-void TypeChecker::recurseSingleTopAST(AST* const ast, std::set<Type> &typeList,
+void TopTypeChecker::recurseSingleTopAST(AST* const ast, std::set<Type> &typeList,
                                       std::set<CompilationUnit> &imports) {
     if (ast == nullptr)
         return;
@@ -220,7 +220,7 @@ void TypeChecker::recurseSingleTopAST(AST* const ast, std::set<Type> &typeList,
         case TokenType::TK_USE:
         {
             std::string importName = ast->children.at(1)->t->string;
-            auto package = Loader::Load(this->unit.directoryName, importName);
+            auto package = Loader::Load(this->tc->unit.directoryName, importName);
             package->buildUnit();
 
             // For now don't both with the type-id
@@ -242,9 +242,9 @@ void TypeChecker::recurseSingleTopAST(AST* const ast, std::set<Type> &typeList,
     recurseSingleTopAST(ast->sibling, typeList, imports);
 }
 
-bool TypeChecker::checkMixin(std::string mixin, FullAST* ast) {
+bool TopTypeChecker::checkMixin(std::string mixin, FullAST* ast) {
     // Look up type in AST List
-    for (auto f : this->fullASTList) {
+    for (auto f : this->tc->fullASTList) {
         for (auto type : f->topLevelDecls) {
             if (type.name.compare(mixin) == 0) {
                 return true;
@@ -265,13 +265,13 @@ bool TypeChecker::checkMixin(std::string mixin, FullAST* ast) {
     return false;
 }
 
-void TypeChecker::checkMixins() {
-    for (auto fullAST : this->fullASTList) {
+void TopTypeChecker::checkMixins() {
+    for (auto fullAST : this->tc->fullASTList) {
         for (auto top : fullAST->topLevelDecls) {
             // For every mixin check its existence
             for (auto mixin : top.mixins) {
                 if (!this->checkMixin(mixin, fullAST)) {
-                    this->errorList.push_back(Error(fullAST->ast->t->fileName,
+                    this->tc->errorList.push_back(Error(fullAST->ast->t->fileName,
                                                     top.ast->t->line,
                                                     top.ast->t->linePos,
                                                     ("Mixin " +
@@ -283,15 +283,15 @@ void TypeChecker::checkMixins() {
     }
 }
 
-void TypeChecker::checkNameClashes() {
-    for (auto ast : this->fullASTList) {
+void TopTypeChecker::checkNameClashes() {
+    for (auto ast : this->tc->fullASTList) {
         for (auto type : ast->topLevelDecls) {
             auto name = type.name;
 
-            if (typeNames.find(name) == typeNames.end()) {
-                typeNames.insert(name);
+            if (tc->typeNames.find(name) == tc->typeNames.end()) {
+                tc->typeNames.insert(name);
             } else {
-                this->errorList.push_back(
+                this->tc->errorList.push_back(
                                 Error(type.ast->t->fileName,
                                       type.ast->t->line,
                                       type.ast->t->linePos,
@@ -304,11 +304,10 @@ void TypeChecker::checkNameClashes() {
     }
 }
 
-void TypeChecker::topLevelTypes() {
-    fullASTList = std::set<FullAST*>();
+void TopTypeChecker::topLevelTypes() {
 
     // All compilation units
-    for (auto ast : this->astList) {
+    for (auto ast : this->tc->astList) {
         std::cout << "Typechecking file: " << ast->t->fileName << std::endl;
 
         // Collections holding topLevel types
@@ -320,23 +319,23 @@ void TypeChecker::topLevelTypes() {
 
         auto fullAST = new FullAST(ast, imports, topLevel);
 
-        fullASTList.insert(fullAST);
+        tc->fullASTList.insert(fullAST);
     }
 
     this->checkMixins();
     this->checkNameClashes();
 }
 
-void TypeChecker::typeCheck() {
+void TopTypeChecker::typeCheck() {
     this->topLevelTypes();
 
-    if (this->errorList.size() > 0) {
+    if (this->tc->errorList.size() > 0) {
         std::cout << "Errors detected in top level types" << std::endl;
     }
 
     // do more type detection here
 
-    for (auto error : this->errorList) {
+    for (auto error : this->tc->errorList) {
         std::cout << "Error at " << error.prog_name << "\t"
             << error.line << ":" << error.line_pos << "\t"
             << error.message << std::endl;

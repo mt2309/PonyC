@@ -67,7 +67,7 @@ struct Function : ClassContents {
     std::vector<Parameter> outputs;
     
     Function(Mode m, std::vector<Parameter> args, std::vector<Parameter> o, std::string n, const AST* a) :
-    ClassContents(n,a), arguments(args), outputs(o) {}
+        ClassContents(n,a), mode(m), arguments(args), outputs(o) {}
 };
 
 struct Message : ClassContents {
