@@ -31,9 +31,7 @@ public:
 
 private:
     void topLevelTypes();
-    void checkMixins();
     void recurseSingleTopAST(AST* const ast, std::set<Type> &t, std::set<CompilationUnit> &i);
-    bool checkMixin(std::string mixin, FullAST* ast);
     void checkNameClashes();
     Type* newType(AST* const ast, Kind k, std::set<ClassContents> contents);
     Mode getMode(AST* const ast);

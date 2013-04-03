@@ -73,20 +73,20 @@ struct Function : ClassContents {
 struct Message : ClassContents {
     Message(std::string n, const AST* a) : ClassContents(n,a) {}
 };
-
-
-struct Type {
-    std::string name;
     
+struct Type {
+    
+    std::string name;
     Kind kind;
     
     const AST* const ast;
     std::vector<std::string> mixins;
+    std::vector<Type> fullyQualifiedMixins;
     std::set<ClassContents> contents;
     
     Type(std::string n, Kind k, const AST* a, std::vector<std::string> m,
          std::set<ClassContents> c) :  name(n), kind(k), ast(a),
-    mixins(m), contents(c) {}
+    mixins(m), fullyQualifiedMixins(), contents(c) {}
     
     Type(std::string n, Kind k, const AST* a) : name(n), kind(k), ast(a) {}
     

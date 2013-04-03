@@ -7,6 +7,7 @@
 #include "CompilationUnit.h"
 #include "TypeChecker.h"
 #include "TopTypeChecker.h"
+#include "TraitTypeChecker.h"
 #include "Parser.h"
 
 #pragma GCC diagnostic push
@@ -85,6 +86,9 @@ void CompilationUnit::buildUnit() {
 
     //Type check!
     auto typeChecker = new TypeChecker(*this);
-    auto top = new TopTypeChecker(typeChecker);
-    top->typeCheck();
+    auto top = TopTypeChecker(typeChecker);
+    top.typeCheck();
+    
+    auto trait = TraitTypeChecker(typeChecker);
+    trait.typeCheck();
 }
