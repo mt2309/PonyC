@@ -7,34 +7,31 @@
 //
 
 #include "Lexer.h"
-#include "Error.h"
 
 #include <assert.h>
-#include <vector>
-#include <string>
-#include <stdlib.h>
 #include <math.h>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wglobal-constructors"
 
 const std::vector<const symbol_t> Lexer::symbols2 = {
-    { "->", TokenType::TK_RESULTS },
-    { "::", TokenType::TK_PACKAGE },
+    { std::string("->"), TokenType::TK_RESULTS },
+    { std::string("::"), TokenType::TK_PACKAGE },
 
-    { "<<", TokenType::TK_LSHIFT },
-    { ">>", TokenType::TK_RSHIFT },
+    { std::string("<<"), TokenType::TK_LSHIFT },
+    { std::string(">>"), TokenType::TK_RSHIFT },
 
-    { "==", TokenType::TK_EQ },
-    { "!=", TokenType::TK_NOTEQ },
-    { "#=", TokenType::TK_STEQ },
-    { "~=", TokenType::TK_NSTEQ },
+    { std::string("=="), TokenType::TK_EQ },
+    { std::string("!="), TokenType::TK_NOTEQ },
+    { std::string("#="), TokenType::TK_STEQ },
+    { std::string("~="), TokenType::TK_NSTEQ },
 
-    { "[:", TokenType::TK_MODE },
+    { std::string("[:"), TokenType::TK_MODE },
 
-    { "<=", TokenType::TK_LE },
-    { ">=", TokenType::TK_GE },
+    { std::string("<="), TokenType::TK_LE },
+    { std::string(">="), TokenType::TK_GE },
 };
 
 const std::vector<const symbol_t> Lexer::symbols1 = {

@@ -47,7 +47,6 @@ public:
     Token* next();
     void adv(size_t);
     char look();
-    std::string copy();
     void string_terminate();
     void append(char c);
     bool appendn(size_t);
@@ -68,8 +67,6 @@ private:
     Token* symbol();
     Token* lexer_slash();
     Token* lexer_string();
-    Token* lexer_float(Token*, size_t);
-    Token* lexer_id();
     void lexer_newline();
     void nested_comment();
     void line_comment();
