@@ -39,7 +39,7 @@ private:
     ClassContents* newFunctionContent(AST* const ast);
     void getTypeList(AST* const ast, std::vector<std::string> &types);
     void getArgsList(AST* const ast, std::vector<Parameter> &types);
-    std::set<ClassContents> collectFunctions(AST* const ast);
+    std::set<ClassContents> collectFunctions(AST* const ast, Kind k);
 };
 
 #endif  // CPP_INCLUDE_TOPTYPECHECKER_H_

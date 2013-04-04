@@ -11,19 +11,14 @@
 
 #include <assert.h>
 #include <iostream>
-#include <set>
-
-#include "Loader.h"
-#include "Primitives.h"
 
 #define debug(x)    (std::cout << x << std::endl)
 
-bool TraitTypeChecker::checkMixin(std::string mixin, Type& t, FullAST* ast) {
+bool TraitTypeChecker::checkMixin(std::string mixin, Type& t, FullAST ast) {
     // Look up type in AST List
-    for (auto f : this->tc->fullASTList) {
-        for (auto type : f->topLevelDecls) {
+    for (auto &f : this->tc->fullASTList) {
+        for (auto &type : f.topLevelDecls) {
             if (type.name.compare(mixin) == 0) {
-                debug("here");
                 t.fullyQualifiedMixins.push_back(type);
                 debug(t.fullyQualifiedMixins.size());
                 return true;
@@ -32,12 +27,11 @@ bool TraitTypeChecker::checkMixin(std::string mixin, Type& t, FullAST* ast) {
     }
 
     // Then look it up in the imports
-    for (auto compilationUnit : ast->imports) {
-        for (auto f : compilationUnit.fullASTList) {
-            for (auto type : f.topLevelDecls) {
+    for (auto &compilationUnit : ast.imports) {
+        for (auto &f : compilationUnit.fullASTList) {
+            for (auto &type : f.topLevelDecls) {
                 if (type.name.compare(mixin) == 0) {
                     t.fullyQualifiedMixins.push_back(type);
-                    debug("or here");
                     return true;
                 }
             }
@@ -48,13 +42,14 @@ bool TraitTypeChecker::checkMixin(std::string mixin, Type& t, FullAST* ast) {
 }
 
 void TraitTypeChecker::checkMixins() {
-    debug("here");
-    for (auto fullAST : this->tc->fullASTList) {
-        for (auto top : fullAST->topLevelDecls) {
+    printf("\n");
+    for (auto &fullAST : this->tc->fullASTList) {
+        std::cout << "Traitchecking file: " << fullAST.ast->t->fileName << std::endl;
+        for (auto top : fullAST.topLevelDecls) {
             // For every mixin check its existence
             for (auto mixin : top.mixins) {
                 if (!this->checkMixin(mixin, top, fullAST)) {
-                    this->tc->errorList.push_back(Error(fullAST->ast->t->fileName,
+                    this->tc->errorList.push_back(Error(fullAST.ast->t->fileName,
                                                     top.ast->t->line,
                                                     top.ast->t->linePos,
                                                     ("Mixin " +
@@ -74,8 +69,6 @@ void TraitTypeChecker::typeCheck() {
     if (this->tc->errorList.size() > 0) {
         std::cout << "Errors detected in trait type checking" << std::endl;
     }
-
-    // do more type detection here
 
     for (auto error : this->tc->errorList) {
         std::cout << "Error at " << error.prog_name << "\t"

@@ -13,12 +13,12 @@ typedef std::string program_name;
 
 class CompilationUnit {
     private:
-        const int stage;
+        int stage;
 
     public:
-        std::vector<FullAST> fullASTList;
+        std::set<FullAST> fullASTList;
 
-        const std::string directoryName;
+        std::string directoryName;
 
         std::vector<AST*> astList;
 

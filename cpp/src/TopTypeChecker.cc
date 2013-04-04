@@ -11,10 +11,8 @@
 
 #include <assert.h>
 #include <iostream>
-#include <set>
 
 #include "Loader.h"
-#include "Primitives.h"
 
 #define debug(x)    (std::cout << x << std::endl)
 
@@ -95,14 +93,12 @@ static std::string getType(AST* const ast) {
         case TokenType::TK_PARTIAL:
             break;
         case TokenType::TK_TYPEID:
-            debug("The type is: " + ast->children.at(0)->t->string + " !");
             return ast->children.at(0)->t->string;
         case TokenType::TK_LAMBDA:
             break;
         default:
             break;
     }
-    debug("here");
     return "";
 }
 
@@ -136,8 +132,8 @@ void TopTypeChecker::getArgsList(AST* const ast, std::vector<Parameter> &types) 
 
 ClassContents* TopTypeChecker::newVarContent(AST* const ast) {
     auto type = std::vector<std::string>();
-    getTypeList(ast, type);
-    Field* v = new Field(ast->children.at(0)->t->string, type, ast);
+    getTypeList(ast->children.at(1), type);
+    Field* v = new Field(ast->children.at(0)->t->string, ast->children.at(2) == nullptr, type, ast);
     return v;
 }
 
@@ -148,39 +144,56 @@ ClassContents* TopTypeChecker::newFunctionContent(AST* const ast) {
     getArgsList(ast->children.at(3), inputs);
     getArgsList(ast->children.at(4), outputs);
     
-    return new Function(getMode(ast->children.at(0)), inputs, outputs, ast->children.at(1)->t->string, ast);
+    return new Function(getMode(ast->children.at(0)), ast->children.at(6) == nullptr, inputs, outputs, ast->children.at(1)->t->string, ast);
 }
 
-std::set<ClassContents> TopTypeChecker::collectFunctions(AST* const ast) {
+std::set<ClassContents> TopTypeChecker::collectFunctions(AST* const ast, Kind k) {
     auto contents = std::set<ClassContents>();
 
     AST* node = ast;
 
     while (node != nullptr) {
         switch (node->t->id) {
-            case TokenType::TK_VAR:
-                debug("var declaration");
+            case TokenType::TK_FIELD:
                 contents.insert(*newVarContent(node));
                 break;
+                
             case TokenType::TK_DELEGATE:
-                debug("delegate");
-                contents.insert(Delegate(node->children.at(0)->t->string,node));
+                contents.insert(Delegate(node->children.at(0)->t->string, node));
                 break;
+                
             case TokenType::TK_NEW:
-                debug("constructor");
-                contents.insert(Constructor(node->children.at(1)->t->string,node));
+                if (ast->children.at(5) == nullptr && k != Kind::TYPE_TRAIT) {
+                    tc->errorList.emplace_back(Error(ast->t->fileName, ast->t->line, ast->t->linePos, "Abstract constructor in non-trait class"));
+                }
+                contents.insert(Constructor(node->children.at(1)->t->string, node->children.at(5) == nullptr, node));
                 break;
+                
             case TokenType::TK_AMBIENT:
-                debug("ambient");
-                contents.insert(Ambient(node->children.at(0)->t->string,node));
+                if (ast->children.at(4) == nullptr && k != Kind::TYPE_TRAIT) {
+                    tc->errorList.emplace_back(Error(ast->t->fileName, ast->t->line, ast->t->linePos, "Abstract ambient in non-trait class"));
+                }
+                contents.insert(Ambient(node->children.at(0)->t->string, node->children.at(4) == nullptr, node));
                 break;
+                
             case TokenType::TK_FUNCTION:
-                debug("function");
+                if ((ast->children.at(6) == nullptr) && k != Kind::TYPE_TRAIT) {
+                    tc->errorList.emplace_back(Error(ast->t->fileName, ast->t->line, ast->t->linePos, "Abstract function in non-trait class"));
+                }
+                for (auto &a : ast->children) {
+                    debug(a);
+                    if (a != nullptr) {
+                        debug("tok: " + std::to_string(tokTypeInt(a->t->id)));
+                    }
+                }
                 contents.insert(*newFunctionContent(node));
                 break;
+                
             case TokenType::TK_MESSAGE:
-                debug("message");
-                contents.insert(Message(node->children.at(0)->t->string,node));
+                if (ast->children.at(4) == nullptr && k != Kind::TYPE_TRAIT) {
+                    tc->errorList.emplace_back(Error(ast->t->fileName, ast->t->line, ast->t->linePos, "Abstract message in non-trait class"));
+                }
+                contents.insert(Message(node->children.at(0)->t->string,node->children.at(4) == nullptr, node));
                 break;
             default:
                 break;
@@ -201,17 +214,17 @@ void TopTypeChecker::recurseSingleTopAST(AST* const ast, std::set<Type> &typeLis
         case TokenType::TK_OBJECT:
             typeList.insert(*newType(ast,
                                     Kind::TYPE_OBJECT,
-                                    collectFunctions(ast->children.at(3)->children.at(0))));
+                                     collectFunctions(ast->children.at(3)->children.at(0), Kind::TYPE_OBJECT)));
             break;
         case TokenType::TK_TRAIT:
             typeList.insert(*newType(ast,
                                     Kind::TYPE_TRAIT,
-                                    collectFunctions(ast->children.at(3)->children.at(0))));
+                                     collectFunctions(ast->children.at(3)->children.at(0), Kind::TYPE_TRAIT)));
             break;
         case TokenType::TK_ACTOR:
             typeList.insert(*newType(ast,
                                     Kind::TYPE_ACTOR,
-                                    collectFunctions(ast->children.at(3)->children.at(0))));
+                                     collectFunctions(ast->children.at(3)->children.at(0), Kind::TYPE_ACTOR)));
             break;
         case TokenType::TK_DECLARE:
             // Are declarations types? (yes - mappings from one type to another)
@@ -243,8 +256,8 @@ void TopTypeChecker::recurseSingleTopAST(AST* const ast, std::set<Type> &typeLis
 }
 
 void TopTypeChecker::checkNameClashes() {
-    for (auto ast : this->tc->fullASTList) {
-        for (auto type : ast->topLevelDecls) {
+    for (auto &ast : this->tc->fullASTList) {
+        for (auto &type : ast.topLevelDecls) {
             auto name = type.name;
 
             if (tc->typeNames.find(name) == tc->typeNames.end()) {
@@ -264,9 +277,9 @@ void TopTypeChecker::checkNameClashes() {
 }
 
 void TopTypeChecker::topLevelTypes() {
-
+    printf("\n");
     // All compilation units
-    for (auto ast : this->tc->astList) {
+    for (auto &ast : this->tc->astList) {
         std::cout << "Typechecking file: " << ast->t->fileName << std::endl;
 
         // Collections holding topLevel types
@@ -276,9 +289,9 @@ void TopTypeChecker::topLevelTypes() {
 
         recurseSingleTopAST(ast, topLevel, imports);
 
-        auto fullAST = new FullAST(ast, imports, topLevel);
+        auto fullAST = FullAST(ast, imports, topLevel);
 
-        tc->fullASTList.insert(fullAST);
+        tc->fullASTList.emplace(fullAST);
     }
 
     this->checkNameClashes();

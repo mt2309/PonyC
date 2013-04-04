@@ -1,6 +1,5 @@
 #include <iostream>
 #include <tuple>
-#include <string>
 #include <fstream>
 #include <sstream>
 
@@ -91,4 +90,6 @@ void CompilationUnit::buildUnit() {
     
     auto trait = TraitTypeChecker(typeChecker);
     trait.typeCheck();
+
+    this->fullASTList = typeChecker->fullASTList;
 }

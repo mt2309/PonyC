@@ -22,7 +22,7 @@ public:
     
 private:
     void checkMixins();
-    bool checkMixin(std::string, Type&, FullAST*);
+    bool checkMixin(std::string, Type&, FullAST);
 
 };
 

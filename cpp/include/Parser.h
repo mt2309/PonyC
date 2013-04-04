@@ -34,13 +34,12 @@ public:
 private:
     Token* t;
     AST* m_ast;
-    const std::string program_text;
     const std::string file_name;
     Lexer lexer;
 
 public:
     Parser(std::string _file_name, std::string file) : error_list(new std::vector<Error>()),
-        program_text(file), file_name(_file_name),
+        file_name(_file_name),
         lexer(_file_name, file, error_list) {}
 
     AST* parse();
@@ -51,7 +50,6 @@ public:
     bool expect(TokenType, AST*, size_t);
     void rule(rule_t, AST*, size_t);
     void rulelist(rule_t, TokenType, AST*, size_t);
-    AST* tokenrule();
 
 private:
     AST* ast_new(TokenType);

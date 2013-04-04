@@ -22,14 +22,12 @@ class TypeChecker {
 public:
     const CompilationUnit unit;
     std::vector<AST*> astList;
-    std::set<FullAST*> fullASTList;
+    std::set<FullAST> fullASTList;
     std::vector<const Error> errorList;
     std::set<std::string> typeNames;
     
     explicit TypeChecker(CompilationUnit _unit) :
         unit(_unit), astList(_unit.astList), errorList(), typeNames() {}
-    
-    void typeCheck();
 };
 
 

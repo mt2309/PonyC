@@ -28,9 +28,10 @@ enum class Mode {
 
 struct ClassContents {
     std::string name;
+    bool abstract;
     const AST* ast;
     
-    ClassContents(std::string n, const AST* a) : name(n), ast(a) {}
+    ClassContents(std::string n, bool abs, const AST* a) : name(n), abstract(abs), ast(a) {}
 };
 
 inline bool operator<(const ClassContents& a, const ClassContents& b) {
@@ -45,20 +46,20 @@ struct Parameter {
     
 struct Field : ClassContents {
     std::vector<std::string> type;
-    Field(std::string n, std::vector<std::string> t, const AST* a) : ClassContents(n,a), type(t) {}
+    Field(std::string n, bool abs, std::vector<std::string> t, const AST* a) : ClassContents(n,abs,a), type(t) {}
 };
 
 struct Delegate : ClassContents {
     
-    Delegate(std::string n, const AST* a) : ClassContents(n,a) {}
+    Delegate(std::string n, const AST* a) : ClassContents(n,false,a) {}
 };
 
 struct Constructor : ClassContents {
-    Constructor(std::string n, const AST* a) : ClassContents(n,a) {}
+    Constructor(std::string n, bool abs, const AST* a) : ClassContents(n,abs,a) {}
 };
 
 struct Ambient : ClassContents {
-    Ambient(std::string n, const AST* a) : ClassContents(n,a) {}
+    Ambient(std::string n, bool abs, const AST* a) : ClassContents(n,abs,a) {}
 };
 
 struct Function : ClassContents {
@@ -66,12 +67,12 @@ struct Function : ClassContents {
     std::vector<Parameter> arguments;
     std::vector<Parameter> outputs;
     
-    Function(Mode m, std::vector<Parameter> args, std::vector<Parameter> o, std::string n, const AST* a) :
-        ClassContents(n,a), mode(m), arguments(args), outputs(o) {}
+    Function(Mode m, bool abs, std::vector<Parameter> args, std::vector<Parameter> o, std::string n, const AST* a) :
+        ClassContents(n,abs,a), mode(m), arguments(args), outputs(o) {}
 };
 
 struct Message : ClassContents {
-    Message(std::string n, const AST* a) : ClassContents(n,a) {}
+    Message(std::string n, bool abs, const AST* a) : ClassContents(n,abs,a) {}
 };
     
 struct Type {
@@ -79,16 +80,16 @@ struct Type {
     std::string name;
     Kind kind;
     
-    const AST* const ast;
+    AST* ast;
     std::vector<std::string> mixins;
     std::vector<Type> fullyQualifiedMixins;
     std::set<ClassContents> contents;
     
-    Type(std::string n, Kind k, const AST* a, std::vector<std::string> m,
+    Type(std::string n, Kind k, AST* a, std::vector<std::string> m,
          std::set<ClassContents> c) :  name(n), kind(k), ast(a),
     mixins(m), fullyQualifiedMixins(), contents(c) {}
     
-    Type(std::string n, Kind k, const AST* a) : name(n), kind(k), ast(a) {}
+    Type(std::string n, Kind k, AST* a) : name(n), kind(k), ast(a) {}
     
     Type(std::string n, Kind k) :   name(n), kind(k), ast(nullptr), mixins(),
     contents() {}

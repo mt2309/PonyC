@@ -8,7 +8,7 @@
 //
 
 #ifndef CPP_INCLUDE_PRIMITIVES_H_
-#define CPP_INCLUDE_PRIMTIVES_H_
+#define CPP_INCLUDE_PRIMITIVES_H_
 
 #include <set>
 
