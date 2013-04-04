@@ -12,8 +12,6 @@
 #include <assert.h>
 #include <iostream>
 
-#include "Error.h"
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wc++98-compat-pedantic"
 
@@ -40,11 +38,8 @@ AST* Parser::ast_expect(TokenType id) {
     if (this->current() == id)
         return this->ast_token();
 
-    auto i = tokTypeInt(id);
-    auto cur = tokTypeInt(this->current());
-
-    this->push_error("Expected " + std::to_string(i) + ", got " +
-                     std::to_string(cur));
+    this->push_error("Expected " + tokenToString.at(id) + ", got " +
+                     tokenToString.at(this->current()));
 
     return nullptr;
 }
@@ -75,10 +70,8 @@ bool Parser::expect(TokenType id , AST* ast, size_t slot) {
         return true;
     }
 
-    auto i = tokTypeInt(id);
-    auto c = tokTypeInt(this->current());
-
-    this->push_error("Expected "+std::to_string(i)+", got "+std::to_string(c));
+    this->push_error("Expected " + tokenToString.at(id) + ", got " +
+                     tokenToString.at(this->current()));
 
     return false;
 }
@@ -613,6 +606,8 @@ AST* Parser::field() {
 
     if (this->accept(TokenType::TK_ASSIGN, ast, SIZE_MAX))
         this->rule(&Parser::expr, ast, 2);
+    
+    this->expect(TokenType::TK_SCOLON, ast, SIZE_MAX);
 
     return ast;
 }
@@ -636,6 +631,8 @@ AST* Parser::constructor() {
 
     if (this->current() == TokenType::TK_LBRACE)
         this->rule(&Parser::block, ast, 5);
+    else
+        this->expect(TokenType::TK_SCOLON, ast, SIZE_MAX);
 
     return ast;
 }
@@ -650,6 +647,9 @@ AST* Parser::ambient() {
 
     if (this->current() == TokenType::TK_LBRACE)
         this->rule(&Parser::block, ast, 4);
+    else
+        this->expect(TokenType::TK_SCOLON, ast, SIZE_MAX);
+
 
     return ast;
 }
@@ -669,6 +669,8 @@ AST* Parser::function() {
 
     if (this->current() == TokenType::TK_LBRACE)
         this->rule(&Parser::block, ast, 6);
+    else
+        this->expect(TokenType::TK_SCOLON, ast, SIZE_MAX);
 
     return ast;
 }
@@ -683,6 +685,8 @@ AST* Parser::message() {
 
     if (this->current() == TokenType::TK_LBRACE)
         this->rule(&Parser::block, ast, 4);
+    else
+        this->expect(TokenType::TK_SCOLON, ast, SIZE_MAX);
 
     return ast;
 }
